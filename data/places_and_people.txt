@@ -1,0 +1,38 @@
+1. Pizza Place
+	- Mr. Val : Alien
+2. Laundromat
+	- Old lady : Human
+3. Theater
+	** Nostalgic Pizza
+	- Singer : Human
+	- Bassist : Alien
+	- Drummer : Robot
+4. Bar
+	- Barkeep : Alien
+	- Cynic Drunk : Robot
+5. Waffle House
+	- Crazy Man : Robot
+	- Waitress : Human
+	- Cook : Human
+6. Car Shop
+	- Mechanic : Robot
+	- Dealer : Alien
+7. Farmer's Market
+	- Farmer : Human
+	- Farmer Wife : Alien
+8. Arcade
+	- Addiction Kid : Alien
+	- Coinkeeper : Robot
+9. Thrift Store
+	- Shifty Guy : Alien
+10. Handyman
+	- Builder : Robot
+11. Library
+	- Librarian : Human
+12. Nat and Ash's Ship 
+	- Nat : Robot
+	- Ash : Human
+
+Humans : 7
+Aliens : 7
+Robots : 7
