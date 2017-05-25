@@ -1,0 +1,40 @@
+body{
+  background-color:#BDBDBD;
+}
+h2{
+  text-align: center;
+}
+#game{
+  width:500px;
+  height:500px;
+  border:1px solid #000;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+img{
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  margin-bottom: 10px;
+}
+p{
+  color:#ffffff;
+  font-size:9px;
+}
+#settings{
+  width:500px;
+  border:1px solid #000;
+  background-color:#000000;
+  
+  text-align:center;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  
+}
