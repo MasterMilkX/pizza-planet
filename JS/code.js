@@ -8,7 +8,7 @@ document.body.appendChild(canvas);
 
 //background image
 var bgPNG = new Image();
-bgPNG.src = "../beta_sprites/bg.png";
+bgPNG.src = "../beta_sprites/q2.png";
 bgPNG.onload = function(){
   ctx.drawImage(bgPNG, 0, 0);
 };
@@ -17,6 +17,7 @@ bgPNG.onload = function(){
 var map = []
 
 //pre-set map
+/*
 map = [
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -37,12 +38,11 @@ map = [
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ];
+*/
 
-
-var rows = 20;
-var cols = 20;
+var rows = 40;
+var cols = 40;
 var size = 16;
 var tiles = new Image();
 tiles.src = "../beta_sprites/planet.png";
@@ -106,6 +106,19 @@ var nat = {
   ct : 0
 }
 
+
+//////////////////   MAP FUNCTIONS  /////////////////
+
+function blankMap(){
+  map = [];
+  for(var y = 0; y < rows; y++){
+      var r = [];
+      for(var x = 0; x < cols; x++){
+        r.push(0);
+      }
+      map.push(r);
+    }
+}
 
 
 //////////////////  PLAYER CONTROLS /////////////////
@@ -209,7 +222,14 @@ function withinBounds(x,y){
   return xBound;
 }
 
+function panCamera(){
+  //camera displacement
+  if((nat.x >= (canvas.width / 2)) && (nat.x <= (map[0].length * size) - (canvas.width / 2)))
+      camera.x = nat.x - (canvas.width / 2);
 
+  if((nat.y >= (canvas.width / 2)) && (nat.y <= (map[0].length * size) - (canvas.width / 2)))
+      camera.y = nat.y - (canvas.width / 2);
+}
 
 
 ///////////////////  RENDER  //////////////////////
@@ -294,13 +314,15 @@ function rendersprite(sprite){
 function render(){
   ctx.save();
 
+  ctx.translate(-camera.x, -camera.y);
+
    //clear eveoything
-  ctx.clearRect(0, 0, canvas.width,canvas.height);
+  ctx.clearRect(camera.x, camera.y, canvas.width,canvas.height);
   
   //re-draw bg
   var ptrn = ctx.createPattern(bgPNG, 'repeat'); // Create a pattern with this image, and set it to "repeat".
   ctx.fillStyle = ptrn;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(camera.x, camera.y, canvas.width, canvas.height);
   
   //draw the map
   drawMap();
@@ -312,6 +334,23 @@ function render(){
 
 }
 
+////////////////////  GAME FUNCTIONS  //////////////////
+
+
+function init(){
+  blankMap();
+}
+
+function keyboard(){
+  if(keys[leftKey])
+    goWest(nat);
+  else if(keys[rightKey])
+    goEast(nat);
+  else if(keys[upKey])
+    goNorth(nat);
+  else if(keys[downKey])
+    goSouth(nat);
+}
 
 
 function main(){
@@ -319,7 +358,26 @@ function main(){
   canvas.focus();
 
   travel(nat);
+  panCamera();
 
+   // key events
+  document.body.addEventListener("keydown", function (e) {
+      keys[e.keyCode] = true;
+      keyIn = true;
+  });
+  document.body.addEventListener("keyup", function (e) {
+      keys[e.keyCode] = false;
+      keyIn = false;
+  });
+  keyboard();
+
+  var pixX = Math.round(nat.x / size);
+  var pixY = Math.round(nat.y / size);
+
+  //debug
+  var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
+  settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
+  document.getElementById('botSettings').innerHTML = settings;
 
 }
 main();

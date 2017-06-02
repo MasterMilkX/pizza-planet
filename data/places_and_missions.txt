@@ -1,0 +1,39 @@
+1. Pizza Place
+	- Order pizza (+2 LOVE pts, -$15)
+	* Take delivery jobs (+$25/run)
+	- Advice from Mr. Val (Info on Pizza Planet or LOVE pts)
+2. Laundromat
+	- Collect socks for the old lady (+$2/sock)
+	- Do laundry (Clean clothes, +1 LOVE pts)
+3. Theater
+	- Practice with the band
+	- Watch the band (+1 LOVE pts if w/ Ash)
+	- Perform with the band (+2 LOVE pts if Ash attends)
+4. Bar
+	- Drink (-2 LOVE pts, cannot take jobs)
+	- Wait tables (+$5/table)
+5. Waffle House
+	- Eat waffles (-$5)
+	- Waffle eating contest (-$10, +$100=1st, +$50=2nd, +$25=3rd)
+6. Car Shop
+	* Buy a space car (-$2500, finish game)
+	- Participate in the hoverboard race (-$20, +$200=1st, +$100=2nd, +$50=3rd)
+7. Farmer's Market
+	- Buy space fruit for Ash (-$5, +1 LOVE pts, 50% chance for seeds)
+	- Plant seeds in the garden (free space fruit)
+8. Arcade
+	- Play video games (-$1)
+	- DDM contest (-$5, +$50=1st, +$25=2nd, +$10=3rd)
+9. Pawn Shop
+	- Buy stolen goods (-$5..$20, +$2..$50 if returned, +1/-2 LOVE pts if returned or not)
+	- Buy presents for Ash (-$5-$50, +2 LOVE pts)
+10. Handyman
+	- Buy furniture (-$10-$30, +1 LOVE pts, new furniture for ship)
+	- Fix hoverboard (-$20, upgraded hoverboard)
+11. Library
+	- Read (Info on money or conversation topics)
+	- Check out books for Ash (+1 LOVE pt)
+12. Nat and Ash's Ship 
+	* Talk with Ash (+/-1..3 LOVE pts based on responses)
+	- Pizza night with Ash (see "Order Pizza")
+	* Sleep (+/-1 LOVE pts based on day)
