@@ -15,22 +15,7 @@ bgPNG.onload = function(){
 
 //level
 var map = [];
-var edges = [
-[22, 3], [24, 2], [26, 2], [29, 1], 
-[21, 4], [20, 4], [19, 5], [17, 6], 
-[16, 7], [15, 8], [14, 9], [13, 10], 
-[12, 11], [11, 12], [9, 14], [8, 15], 
-[7, 16], [6, 18], [5, 19], [4, 21], 
-[3, 23], [2, 26], [1, 29], [0, 34], 
-[6, 18], [3, 23], [2, 25], [4, 22], 
-[3, 24], [2, 27], [1, 28], [1, 30], 
-[1, 31], [1, 32], [0, 33], [0, 35], 
-[0, 36], [0, 37], [0, 38], [0, 39], 
-[18, 6], [23, 3], [25, 2], [27, 1], 
-[28, 1], [30, 0], [31, 0], [32, 0], 
-[33, 0], [34, 0], [35, 0], [36, 0], 
-[37, 0], [38, 0], [39, 0], [10, 13], 
-[7, 17], [5, 20]];
+var curQuad = "q2";
 //pre-set map
 /*
 map = [
@@ -59,25 +44,13 @@ map = [
 var rows = 40;
 var cols = 40;
 var size = 16;
+var level_loaded = false;
 var tiles = new Image();
 tiles.src = "../beta_sprites/planet.png";
 var tilesReady = false;
 tiles.onload = function(){
   tilesReady = true;
 };
-
-//camera
-var camera = {
-  x : 0,
-  y : 0
-};
-
-//controls
-var keys = [];
-var upKey = 38; //[Up]
-var leftKey = 37;
-var rightKey = 39;
-var downKey = 40;
 
 //player
 var natIMG  = new Image();
@@ -105,8 +78,8 @@ var nat = {
   speed : 0.5,
   initPos : 0,
   moving : false,
-  x : 9 * size, 
-  y : 9 * size,
+  x : 20 * size, 
+  y : 15 * size,
   velX : 0,
   velY : 0,
   fps : 9,            //frame speed
@@ -138,26 +111,107 @@ var nat = {
 }
 
 
+//camera
+var camera = {
+  x : 0,
+  y : 0
+};
+
+//controls
+var keys = [];
+var upKey = 38; //[Up]
+var leftKey = 37;
+var rightKey = 39;
+var downKey = 40;
+
+
 //////////////////   MAP FUNCTIONS  /////////////////
 
-function blankMap(){
-  map = [];
-  for(var y = 0; y < rows; y++){
-      var r = [];
-      for(var x = 0; x < cols; x++){
-        r.push(0);
-      }
-      map.push(r);
-    }
+function blankMap(quadrant){
+  //reset background
+  bgPNG.src = "../beta_sprites/" + quadrant + ".png";
+  bgPNG.onload = function(){
+    ctx.drawImage(bgPNG, 0, 0);
+  };
 
-    mapEdge();
+  //reset map
+  map = [];
+  level_loaded = false;
+  for(var y = 0; y < rows; y++){
+    var r = [];
+    for(var x = 0; x < cols; x++){
+      r.push(0);
+    }
+    map.push(r);
+  }
+
+  //finish
+  //mapEdge(quadrant);
+  curQuad = quadrant;
+  level_loaded = true;
+
+  //reset camera
+  resetCamera();
 }
 
-function mapEdge(){
-  for(var i=0; i<edges.length; i++){
-    var edge = edges[i];
+//if at the edge of space
+function mapEdge(space_edge, moon_edge){
+  for(var i=0; i<quadrant.length; i++){
+    var edge = quadrant[i];
     map[edge[1]][edge[0]] = 1;
   }
+}
+
+//if at the edge of the quadrant
+function atWorldsEnd(quadrant){
+  var halfTile = size / 2;
+
+  if(quadrant === "q1"){
+    if(nat.x <= -halfTile){                            //edge of west side
+      newQuadrant("q2","west");
+    }else if(nat.y >= ((rows * size) - halfTile)){     //edge of south side
+      newQuadrant("q4", "south");
+    }
+  }else if(quadrant === "q2"){
+    if(nat.x >= ((cols * size) - halfTile)){           //edge of east side
+      newQuadrant("q1", "east");
+    }else if(nat.y >= ((rows * size) - halfTile)){     //edge of south side
+      newQuadrant("q3", "south");
+    }
+  }else if(quadrant === "q3"){
+    if(nat.y <= -halfTile){                           //edge of north side
+      newQuadrant("q2", "north");
+    }else if(nat.x >= ((cols * size) - halfTile)){     //edge of east side
+      newQuadrant("q4", "east");
+    }
+  }else if(quadrant === "q4"){
+    if(nat.y <= -halfTile){                           //edge of north side
+      newQuadrant("q1", "north");
+    }else if(nat.x <= -halfTile){                            //edge of west side
+      newQuadrant("q3","west");
+    }
+  }
+}
+
+function newQuadrant(new_quad, direction){
+  var halfTile = size / 2;
+  if(direction == "north"){             //spawn at the bottom
+    nat.y = rows * size - halfTile;
+    nat.initPos = rows * size;
+  }else if(direction == "south"){       //spawn at the top
+    nat.y = -halfTile;
+    nat.initPos = -size;
+  }else if(direction == "west"){        //spawn at the right
+    nat.x = cols * size - halfTile;
+    nat.initPos = cols * size;
+  }else if(direction == "east"){        //spawn at the left
+    nat.x = -halfTile;
+    nat.initPos = -size;
+  }
+
+  blankMap(new_quad);
+
+
 }
 
 
@@ -265,12 +319,25 @@ function withinBounds(x,y){
 }
 
 function panCamera(){
-  //camera displacement
-  if((nat.x >= (canvas.width / 2)) && (nat.x <= (map[0].length * size) - (canvas.width / 2)))
-      camera.x = nat.x - (canvas.width / 2);
+  if(level_loaded){   //map filled?
+    //camera displacement
+    if((nat.x >= (canvas.width / 2)) && (nat.x <= (map[0].length * size) - (canvas.width / 2)))
+        camera.x = nat.x - (canvas.width / 2);
 
-  if((nat.y >= (canvas.width / 2)) && (nat.y <= (map[0].length * size) - (canvas.width / 2)))
-      camera.y = nat.y - (canvas.width / 2);
+    if((nat.y >= (canvas.height / 2)) && (nat.y <= (map.length * size) - (canvas.height / 2)))
+        camera.y = nat.y - (canvas.height / 2);
+  }
+}
+
+function resetCamera(){
+  camera.x = 0;
+  camera.y = 0;
+
+  if((nat.x > (map[0].length * size) - (canvas.width / 2)))
+    camera.x = (map[0].length * size) - canvas.width;
+
+  if((nat.y > (map.length * size) - (canvas.height / 2)))
+    camera.y = (map.length * size) - canvas.height;
 }
 
 
@@ -384,7 +451,7 @@ function render(){
 
 
 function init(){
-  blankMap();
+  blankMap("q2");
 }
 
 function keyboard(){
@@ -408,6 +475,7 @@ function main(){
 
   travel(nat);
   panCamera();
+  atWorldsEnd(curQuad);
 
    // key events
   document.body.addEventListener("keydown", function (e) {
@@ -419,7 +487,8 @@ function main(){
       keyIn = false;
   });
   document.body.addEventListener("keypress", function (e){
-    nat.board = !nat.board;
+    if(e.keyCode == 122)
+      nat.board = !nat.board;
   });
   keyboard();
 
