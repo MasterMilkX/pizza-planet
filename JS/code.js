@@ -14,8 +14,23 @@ bgPNG.onload = function(){
 };
 
 //level
-var map = []
-
+var map = [];
+var edges = [
+[22, 3], [24, 2], [26, 2], [29, 1], 
+[21, 4], [20, 4], [19, 5], [17, 6], 
+[16, 7], [15, 8], [14, 9], [13, 10], 
+[12, 11], [11, 12], [9, 14], [8, 15], 
+[7, 16], [6, 18], [5, 19], [4, 21], 
+[3, 23], [2, 26], [1, 29], [0, 34], 
+[6, 18], [3, 23], [2, 25], [4, 22], 
+[3, 24], [2, 27], [1, 28], [1, 30], 
+[1, 31], [1, 32], [0, 33], [0, 35], 
+[0, 36], [0, 37], [0, 38], [0, 39], 
+[18, 6], [23, 3], [25, 2], [27, 1], 
+[28, 1], [30, 0], [31, 0], [32, 0], 
+[33, 0], [34, 0], [35, 0], [36, 0], 
+[37, 0], [38, 0], [39, 0], [10, 13], 
+[7, 17], [5, 20]];
 //pre-set map
 /*
 map = [
@@ -70,6 +85,11 @@ natIMG.src = "../beta_sprites/nat_f.png";
 var natReady = false;
 natIMG.onload = function(){natReady = true;}
 
+var hoverIMG  = new Image();
+hoverIMG.src = "../beta_sprites/hover-nat_f.png";
+var hoverReady = false;
+hoverIMG.onload = function(){hoverReady = true;}
+
 var nat = {
   //sprite properties
   width : 16,
@@ -93,15 +113,26 @@ var nat = {
   fpr : 12,            //# of frames per row
   show : true,
 
-  //animation
+  //hoverboard
+  board : false, 
+  hover_height: 24,
+  hover_offsetY : 8,
+  hover_speed : 1,
+  hover_img : hoverIMG,
+  hover_ready : hoverReady,
+
+  //walk animation
   idleNorth : [4,4,4,4],
   idleSouth : [1,1,1,1],
   idleWest : [7,7,7,7],
   idleEast : [10,10,10,10],
+
+  //movement animation
   moveNorth : [3,4,5,4],
   moveSouth : [0,1,2,1],
   moveWest : [6,7,8,7],
   moveEast : [9,10,11,10],
+
   curFrame : 0,
   ct : 0
 }
@@ -118,6 +149,15 @@ function blankMap(){
       }
       map.push(r);
     }
+
+    mapEdge();
+}
+
+function mapEdge(){
+  for(var i=0; i<edges.length; i++){
+    var edge = edges[i];
+    map[edge[1]][edge[0]] = 1;
+  }
 }
 
 
@@ -153,10 +193,12 @@ function goWest(sprite){
 }
 function travel(sprite){
   if(sprite.action == "travel"){   //continue if allowed to move
+    var curspeed = (sprite.board ? sprite.hover_speed : sprite.speed);
+
     //travel north
     if(sprite.dir == "north"){
       if(Math.floor(sprite.y) > (sprite.initPos - size)){
-        sprite.velY = sprite.speed;
+        sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), -sprite.velY, (sprite.initPos - size));
         sprite.moving = true;
       }else{
@@ -166,7 +208,7 @@ function travel(sprite){
       }
     }else if(sprite.dir == "south"){
       if(Math.floor(sprite.y) < (sprite.initPos + size)){
-        sprite.velY = sprite.speed;
+        sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), sprite.velY, (sprite.initPos + size));;
         sprite.moving = true;
       }else{
@@ -176,7 +218,7 @@ function travel(sprite){
       }
     }else if(sprite.dir == "east"){
       if(Math.floor(sprite.x) < (sprite.initPos + size)){
-        sprite.velX = sprite.speed;
+        sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), sprite.velX, (sprite.initPos + size));
         sprite.moving = true;
       }else{
@@ -186,7 +228,7 @@ function travel(sprite){
       }
     }else if(sprite.dir == "west"){
       if(Math.floor(sprite.x) > (sprite.initPos - size)){
-        sprite.velX = sprite.speed;
+        sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), -sprite.velX, (sprite.initPos - size));;
         sprite.moving = true;
       }else{
@@ -302,12 +344,16 @@ function rendersprite(sprite){
   var row = Math.floor(sequence[sprite.curFrame] / sprite.fpr);
   var col = Math.floor(sequence[sprite.curFrame] % sprite.fpr);
   
+  var curheight = (sprite.board ? sprite.hover_height : sprite.height);
+  var offY = (sprite.board ? sprite.hover_offsetY : sprite.offsetY);
+  var sprIMG = (sprite.board ? sprite.hover_img : sprite.img);
+
   if(sprite.show){
-    ctx.drawImage(sprite.img, 
-    col * sprite.width, row * sprite.height, 
-    sprite.width, sprite.height,
-    sprite.x - sprite.offsetX, sprite.y - sprite.offsetY, 
-    sprite.width, sprite.height);
+    ctx.drawImage(sprIMG, 
+    col * sprite.width, row * curheight, 
+    sprite.width, curheight,
+    sprite.x - sprite.offsetX, sprite.y - offY, 
+    sprite.width, curheight);
   }
 }
 
@@ -342,14 +388,17 @@ function init(){
 }
 
 function keyboard(){
-  if(keys[leftKey])
-    goWest(nat);
-  else if(keys[rightKey])
-    goEast(nat);
-  else if(keys[upKey])
-    goNorth(nat);
-  else if(keys[downKey])
-    goSouth(nat);
+  if(!nat.moving){
+    if(keys[leftKey])
+      goWest(nat);
+    else if(keys[rightKey])
+      goEast(nat);
+    else if(keys[upKey])
+      goNorth(nat);
+    else if(keys[downKey])
+      goSouth(nat);
+  }
+  
 }
 
 
@@ -368,6 +417,9 @@ function main(){
   document.body.addEventListener("keyup", function (e) {
       keys[e.keyCode] = false;
       keyIn = false;
+  });
+  document.body.addEventListener("keypress", function (e){
+    nat.board = !nat.board;
   });
   keyboard();
 
