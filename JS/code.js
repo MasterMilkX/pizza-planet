@@ -16,6 +16,8 @@ bgPNG.onload = function(){
 //level
 var map = [];
 var curQuad = "q2";
+var curHalf = "NEWTON";
+var boundVal = 1;
 //pre-set map
 /*
 map = [
@@ -146,7 +148,17 @@ function blankMap(quadrant){
   }
 
   //finish
-  //mapEdge(quadrant);
+  var edge;
+  if(quadrant === "q1")
+    edge = q1_space_edges;
+  else if(quadrant === "q2")
+    edge = q2_space_edges;
+  else if(quadrant === "q3")
+    edge = q3_space_edges;
+  else if(quadrant === "q4")
+    edge = q4_space_edges;
+  mapEdge(edge);
+
   curQuad = quadrant;
   level_loaded = true;
 
@@ -155,15 +167,15 @@ function blankMap(quadrant){
 }
 
 //if at the edge of space
-function mapEdge(space_edge, moon_edge){
-  for(var i=0; i<quadrant.length; i++){
-    var edge = quadrant[i];
-    map[edge[1]][edge[0]] = 1;
+function mapEdge(edgeset){
+  for(var i=0; i<edgeset.length; i++){
+    var edge = edgeset[i];
+    map[edge[1]][edge[0]] = boundVal;
   }
 }
 
 //if at the edge of the quadrant
-function atWorldsEnd(quadrant){
+function quadChange(quadrant){
   var halfTile = size / 2;
 
   if(quadrant === "q1"){
@@ -193,6 +205,7 @@ function atWorldsEnd(quadrant){
   }
 }
 
+//go to the next quadrant
 function newQuadrant(new_quad, direction){
   var halfTile = size / 2;
   if(direction == "north"){             //spawn at the bottom
@@ -211,9 +224,121 @@ function newQuadrant(new_quad, direction){
 
   blankMap(new_quad);
 
+}
+/*
+//go to the opposite sector
+function sectorChange(quadrant){
+  var halfTile = size / 2;
+  var pixX = Math.round(nat.x / size);
+  var pixY = Math.round(nat.y / size);
+  var altWorld;
+  var altDir;
+
+  if(quadrant === "q1")
+    altWorld = "q2";
+  else if(quadrant === "q2")
+    altWorld = "q1";
+  else if(quadrant === "q3")
+    altWorld = "q4";
+  else if(quadrant === "q4")
+    altWorld = "q3";
+
+  if(nat.dir === "north")
+    altDir = "south";
+  else if(nat.dir === "south")
+    altDir = "north";
+  else if(nat.dir === "east")
+    altDir = "west";
+  else if(nat.dir === "west")
+    altDir = "east";
+
+  if(level_loaded && map[pixX][pixY] == boundVal){
+    atWorldsEnd(altWorld, altDir, pixX, pixY)
+  }
+}
+*/
+function sectorChange2(){
+  var halfTile = size / 2;
+  var altWorld;
+  var n = Math.round((nat.y - halfTile) / size);
+  var s = Math.round((nat.y + halfTile) / size);
+  var e = Math.round((nat.x + halfTile) / size);
+  var w = Math.round((nat.x - halfTile) / size);
+  var pixX = Math.round(nat.x / size);
+  var pixY = Math.round(nat.y / size);
+
+  if(n < 0 || s >= rows || w < 0 || e >= cols)
+    return;
+
+
+  if(curQuad === "q1")
+    altWorld = "q2";
+  else if(curQuad === "q2")
+    altWorld = "q1";
+  else if(curQuad === "q3")
+    altWorld = "q4";
+  else if(curQuad === "q4")
+    altWorld = "q3";
+
+  if(level_loaded){
+    if(nat.dir === "north" && map[n][pixX] == boundVal)
+      atWorldsEnd2(altWorld, nat.dir, pixX, pixY);
+    else if(nat.dir === "south" && map[s][pixX] == boundVal)
+      atWorldsEnd2(altWorld, nat.dir, pixX, pixY);
+    else if(nat.dir === "east" && map[pixY][e] == boundVal)
+      atWorldsEnd2(altWorld, nat.dir, pixX, pixY);
+    else if(nat.dir === "west" && map[pixY][w] == boundVal)
+      atWorldsEnd2(altWorld, nat.dir, pixX, pixY);
+  }
+  
+}
+/*
+//change the section and quadrant
+function atWorldsEnd(altWorld, direction, x, y){
+  curHalf = (curHalf === "NETWON" ? "DA VINCI" : "NEWTON" );
+  blankMap(altWorld);
+  nat.dir = direction;
+  
+  nat.moving = false;
+  var newX = rows - x;
+  var diff = (direction === "west" ? -2 : 2);
+  var diff2 = (direction === "west" ? -3 : 3);
+  nat.x = (newX + diff) * size;
+  nat.initPos = (newX + diff + diff2) * size;
 
 }
+*/
+function atWorldsEnd2(world, dir, ix, iy){
+  if(dir === "north" || dir === "south")
+    nat.y = (iy + 3) * size;
+  var off = (dir === "west" ? -2 : 2);
+  nat.x = Math.abs(cols + off - ix) * size;
+  var halfTile = size / 2;
 
+  if(curHalf === "NEWTON")
+    curHalf = "DA VINCI";
+  else
+    curHalf = "NEWTON"; 
+
+  blankMap(world);
+  nat.velX = 0;
+  nat.velY = 0;
+  nat.action = "idle";
+  nat.moving = false;
+  if(dir === "north")
+    nat.dir = "south";
+  else if(dir === "south")
+    nat.dir = "north";
+
+  if(dir === "north" || dir === "south")
+    nat.initPos = nat.y;
+  else
+    nat.initPos = nat.x;
+
+  //nat.initPos = nat.x;
+  console.log("GO!");
+
+}
 
 //////////////////  PLAYER CONTROLS /////////////////
 
@@ -475,7 +600,8 @@ function main(){
 
   travel(nat);
   panCamera();
-  atWorldsEnd(curQuad);
+  quadChange(curQuad);
+  sectorChange2();
 
    // key events
   document.body.addEventListener("keydown", function (e) {
@@ -498,6 +624,7 @@ function main(){
   //debug
   var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
+  settings += " --- " + curHalf + " | " + curQuad;
   document.getElementById('botSettings').innerHTML = settings;
 
 }

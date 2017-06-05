@@ -7,12 +7,10 @@
   </head>
   <body onload="init()">
     <div id="settings">
-      <button onclick="goNorth(nat)">North</button>
-      <button onclick="goSouth(nat)">South</button>
-      <button onclick="goWest(nat)">West</button>
-      <button onclick="goEast(nat)">East</button>
+      <button onclick="nat.board = !nat.board">BOARD</button>
       <p id="botSettings">...</p>
     </div>
       <script src="code.js"></script>
+      <script src="edges.js"></script>
   </body>
 </html>
