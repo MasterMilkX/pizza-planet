@@ -150,9 +150,11 @@ function nextLevel(){
   //search for the new level
   var aLevel;
   for(var a=0;a<levelList.length;a++){
-    aLevel = levelList[a];
-    if(aLevel.quad === curQuad && aLevel.sect === curSect)
+    bLevel = levelList[a];
+    if(bLevel.quad === curQuad && bLevel.sect === curSect){
+      aLevel = bLevel;
       break;
+    }
   }
 
   //construct buildings
@@ -168,13 +170,6 @@ function nextLevel(){
   console.log("level loaded");
 
 }
-
-function construction(build){
-  if(build === "vals"){
-    console.log("BUILDING VAL'S PIZZA");
-  }
-}
-
 
 
 //////////////////   MAP FUNCTIONS  /////////////////
@@ -572,6 +567,13 @@ function rendersprite(sprite){
   }
 }
 
+function renderPlace(build){
+  if(build.ready){
+    ctx.drawImage(build.img, build.x*size, build.y*size);
+  }
+}
+
+
 function render(){
   ctx.save();
 
@@ -588,9 +590,21 @@ function render(){
   //draw the map
   drawMap();
 
+  for(var b=0;b<buildings.length;b++){
+    if(buildings[b].thru){
+      renderPlace(buildings[b]);
+    }
+  }
+
   drawsprite(nat);
   for(var c=0;c<npcs.length;c++){
     drawsprite(npcs[c]);
+  }
+
+  for(var b=0;b<buildings.length;b++){
+    if(!buildings[b].thru){
+      renderPlace(buildings[b]);
+    }
   }
 
   ctx.restore();
