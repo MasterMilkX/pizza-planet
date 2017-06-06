@@ -1,3 +1,7 @@
+//Global variables
+/*global levelList */
+
+
 //set up the canvas
 var canvas = document.createElement("canvas");
 canvas.id = "game";
@@ -16,9 +20,13 @@ bgPNG.onload = function(){
 //level
 var map = [];
 var curQuad = "q2";
-var curHalf = "NEWTON";
+var curSect = "NEWTON";
 var boundVal = 1;
+var triggerVal = 4;
 var collideTiles = [1];
+
+var buildings = [];
+
 //pre-set map
 /*
 map = [
@@ -49,7 +57,7 @@ var cols = 40;
 var size = 16;
 var level_loaded = false;
 var tiles = new Image();
-tiles.src = "../beta_sprites/planet.png";
+tiles.src = "../beta_sprites/moon_tiles.png";
 var tilesReady = false;
 tiles.onload = function(){
   tilesReady = true;
@@ -59,12 +67,12 @@ tiles.onload = function(){
 var natIMG  = new Image();
 natIMG.src = "../beta_sprites/nat_f.png";
 var natReady = false;
-natIMG.onload = function(){natReady = true;}
+natIMG.onload = function(){natReady = true;};
 
 var hoverIMG  = new Image();
 hoverIMG.src = "../beta_sprites/hover-nat_f.png";
 var hoverReady = false;
-hoverIMG.onload = function(){hoverReady = true;}
+hoverIMG.onload = function(){hoverReady = true;};
 
 var nat = {
   //sprite properties
@@ -111,7 +119,7 @@ var nat = {
 
   curFrame : 0,
   ct : 0
-}
+};
 
 
 //camera
@@ -120,12 +128,53 @@ var camera = {
   y : 0
 };
 
+//npcs
+var npcs = [];
+
 //controls
 var keys = [];
 var upKey = 38; //[Up]
 var leftKey = 37;
 var rightKey = 39;
 var downKey = 40;
+
+//////////////////    LEVEL FUNCTIONS   //////////////
+
+function reset(){
+  npcs = [];
+  buildings = [];
+}
+
+//create eeverything needed for the next level
+function nextLevel(){
+  //search for the new level
+  var aLevel;
+  for(var a=0;a<levelList.length;a++){
+    aLevel = levelList[a];
+    if(aLevel.quad === curQuad && aLevel.sect === curSect)
+      break;
+  }
+
+  //construct buildings
+  for(var b=0;b<aLevel.buildings.length;b++){
+    buildings.push(aLevel.buildings[b]);
+  }
+
+  //make new characters
+  for(var c=0;c<aLevel.chars.length;c++){
+    npcs.push(aLevel.chars[c]);
+  }
+
+  console.log("level loaded");
+
+}
+
+function construction(build){
+  if(build === "vals"){
+    console.log("BUILDING VAL'S PIZZA");
+  }
+}
+
 
 
 //////////////////   MAP FUNCTIONS  /////////////////
@@ -159,7 +208,7 @@ function blankMap(quadrant){
   else if(quadrant === "q4")
     edge = q4_space_edges;
   mapEdge(edge);
-
+  reset();
   curQuad = quadrant;
   level_loaded = true;
 
@@ -224,7 +273,7 @@ function newQuadrant(new_quad, direction){
   }
 
   blankMap(new_quad);
-
+  nextLevel();
 }
 
 
@@ -276,7 +325,7 @@ function travel(sprite){
     }else if(sprite.dir == "south"){
       if(Math.floor(sprite.y) < (sprite.initPos + size) && !hitWall(nat)){
         sprite.velY = curspeed;
-        sprite.y += velControl(Math.floor(sprite.y), sprite.velY, (sprite.initPos + size));;
+        sprite.y += velControl(Math.floor(sprite.y), sprite.velY, (sprite.initPos + size));
         sprite.moving = true;
       }else{
         sprite.velY = 0;
@@ -296,7 +345,7 @@ function travel(sprite){
     }else if(sprite.dir == "west"){
       if(Math.floor(sprite.x) > (sprite.initPos - size) && !hitWall(nat)){
         sprite.velX = curspeed;
-        sprite.x += velControl(Math.floor(sprite.x), -sprite.velX, (sprite.initPos - size));;
+        sprite.x += velControl(Math.floor(sprite.x), -sprite.velX, (sprite.initPos - size));
         sprite.moving = true;
       }else{
         sprite.velX = 0;
@@ -331,12 +380,14 @@ function map_collide(person, val){
     return;
 
   //get the positions
+  var rx;
+  var ry;
   if(person.dir === "north" || person.dir === "west"){
-    var rx = Math.ceil(person.x / size);
-    var ry = Math.ceil(person.y / size);
+    rx = Math.ceil(person.x / size);
+    ry = Math.ceil(person.y / size);
   }else if(person.dir === "south" || person.dir === "east"){
-    var rx = Math.floor(person.x / size);
-    var ry = Math.floor(person.y / size);
+    rx = Math.floor(person.x / size);
+    ry = Math.floor(person.y / size);
   }
 
   //edge of map undecided
@@ -377,12 +428,14 @@ function hitWall(person){
     return;
 
   //get the positions
+  var rx;
+  var ry;
   if(person.dir === "north" || person.dir === "west"){
-    var rx = Math.ceil(person.x / size);
-    var ry = Math.ceil(person.y / size);
+    rx = Math.ceil(person.x / size);
+    ry = Math.ceil(person.y / size);
   }else if(person.dir === "south" || person.dir === "east"){
-    var rx = Math.floor(person.x / size);
-    var ry = Math.floor(person.y / size);
+    rx = Math.floor(person.x / size);
+    ry = Math.floor(person.y / size);
   }
   
 
@@ -430,6 +483,10 @@ function resetCamera(){
   if((nat.y > (map.length * size) - (canvas.height / 2)))
     camera.y = (map.length * size) - canvas.height;
 }
+
+///////////////////    NPCS    //////////////////
+
+
 
 
 ///////////////////  RENDER  //////////////////////
@@ -532,6 +589,9 @@ function render(){
   drawMap();
 
   drawsprite(nat);
+  for(var c=0;c<npcs.length;c++){
+    drawsprite(npcs[c]);
+  }
 
   ctx.restore();
   requestAnimationFrame(render);
@@ -543,6 +603,7 @@ function render(){
 
 function init(){
   blankMap("q2");
+  nextLevel();
 }
 
 function keyboard(){
@@ -574,11 +635,9 @@ function main(){
    // key events
   document.body.addEventListener("keydown", function (e) {
       keys[e.keyCode] = true;
-      keyIn = true;
   });
   document.body.addEventListener("keyup", function (e) {
       keys[e.keyCode] = false;
-      keyIn = false;
   });
   document.body.addEventListener("keypress", function (e){
     if(e.keyCode == 122)
@@ -592,7 +651,7 @@ function main(){
   //debug
   var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
-  settings += " --- " + curHalf + " | " + curQuad;
+  settings += " --- " + curSect + " | " + curQuad;
   document.getElementById('botSettings').innerHTML = settings;
 
 }
