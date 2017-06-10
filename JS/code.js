@@ -1,6 +1,6 @@
 //Global variables
 /*global levelList */
-
+/*global mapList */
 
 //set up the canvas
 var canvas = document.createElement("canvas");
@@ -57,11 +57,12 @@ var cols = 40;
 var size = 16;
 var level_loaded = false;
 var tiles = new Image();
-tiles.src = "../beta_sprites/moon_tiles.png";
+tiles.src = "../tilesets/moon_tiles.png";
 var tilesReady = false;
 tiles.onload = function(){
   tilesReady = true;
 };
+var tpr = 3; //tiles per row
 
 //player
 var natIMG  = new Image();
@@ -86,7 +87,7 @@ var nat = {
   offsetY : 4,
 
   //movement
-  speed : 0.5,
+  speed : 1,
   initPos : 0,
   moving : false,
   x : 20 * size, 
@@ -101,7 +102,7 @@ var nat = {
   board : false, 
   hover_height: 24,
   hover_offsetY : 8,
-  hover_speed : 1,
+  hover_speed : 2,
   hover_img : hoverIMG,
   hover_ready : hoverReady,
 
@@ -146,16 +147,13 @@ function reset(){
 }
 
 //create eeverything needed for the next level
-function nextLevel(){
-  //search for the new level
-  var aLevel;
-  for(var a=0;a<levelList.length;a++){
-    bLevel = levelList[a];
-    if(bLevel.quad === curQuad && bLevel.sect === curSect){
-      aLevel = bLevel;
-      break;
-    }
-  }
+function loadLevel(aLevel, px, py){
+  //reset everything
+  reset();
+
+  //reset nat's position
+  nat.x = px;
+  nat.y = py;
 
   //construct buildings
   for(var b=0;b<aLevel.buildings.length;b++){
@@ -167,6 +165,31 @@ function nextLevel(){
     npcs.push(aLevel.chars[c]);
   }
 
+  //make a moon level
+  if(aLevel.name === "moon"){
+    blankMoon(aLevel.quad);
+    console.log("moon loaded");
+    return;
+  }
+
+  //otherwise make a building level
+  //get the map data
+  var aMap;
+  for(var d=0;d<mapList.length;d++){
+    bMap = mapList[d];
+    if(aLevel.name === bMap.name){
+      aMap = bMap;
+      break;
+    }
+  }
+
+  //reset rows and cols
+  rows = aMap.rows;
+  cols = aMap.cols;
+  collideTiles = aMap.collision;
+
+  loadMap(aMap);
+
   console.log("level loaded");
 
 }
@@ -174,7 +197,7 @@ function nextLevel(){
 
 //////////////////   MAP FUNCTIONS  /////////////////
 
-function blankMap(quadrant){
+function blankMoon(quadrant){
   //reset background
   bgPNG.src = "../beta_sprites/" + quadrant + ".png";
   bgPNG.onload = function(){
@@ -203,8 +226,38 @@ function blankMap(quadrant){
   else if(quadrant === "q4")
     edge = q4_space_edges;
   mapEdge(edge);
-  reset();
   curQuad = quadrant;
+  level_loaded = true;
+
+  //reset camera
+  resetCamera();
+}
+
+function loadMap(lvlmap){
+  //reset background
+  bgPNG.src = "../beta_sprites/blank.png";
+  bgPNG.onload = function(){
+    ctx.drawImage(bgPNG, 0, 0);
+  };
+
+  //reset map
+  console.log("R: " + rows + " C:" + cols)
+
+  map = [];
+  level_loaded = false;
+  for(var y = 0; y < rows; y++){
+    var r = [];
+    for(var x = 0; x < cols; x++){
+      r.push(lvlmap.map[y][x]);
+      //r.push(1);
+    }
+    map.push(r);
+  }
+
+  tiles.src = lvlmap.tileset.src;
+  tilesReady = lvlmap.ready;
+  tpr = lvlmap.tpr;
+
   level_loaded = true;
 
   //reset camera
@@ -267,8 +320,16 @@ function newQuadrant(new_quad, direction){
     nat.initPos = -size;
   }
 
-  blankMap(new_quad);
-  nextLevel();
+  //look for next leveldata
+  var lvl;
+  for(var a = 0;a<levelList.length;a++){
+    var bLvl = levelList[a];
+    if(bLvl.name === "moon" && bLvl.quad === new_quad && bLvl.sect === curSect){
+      lvl = bLvl;
+      break;
+    }
+  }
+  loadLevel(lvl, nat.x, nat.y);
 }
 
 
@@ -486,13 +547,52 @@ function resetCamera(){
 
 ///////////////////  RENDER  //////////////////////
 
+//check for render ok
+function checkRender(){
+  //tiles
+  if(!tilesReady){
+    tiles.onload = function(){
+      tilesReady = true;
+    };
+  }
+  
+
+  //nat
+  if(!nat.ready){
+    nat.img.onload = function(){nat.ready = true;}
+  }
+
+  //npcs
+  for(var a=0;a<npcs.length;a++){
+    if(!npcs[a].ready){
+      if(npcs[a].img.width !== 0){
+        npcs[a].ready = true;
+      }
+    }
+  }
+
+  //buildings
+  for(var b=0;b<buildings.length;b++){
+    if(!buildings[b].ready){
+      if(buildings[b].img.width !== 0){
+        buildings[b].ready = true;
+      }
+    }
+  }
+}
+
 //rendering function for the map
 function drawMap(){
   if(tilesReady){
     for(var y = 0; y < rows; y++){
       for(var x = 0; x < cols; x++){
         //if(withinBounds(x,y)){
-          ctx.drawImage(tiles, size * map[y][x], 0, size, size, (x * size), (y * size), size, size);
+          //ctx.drawImage(tiles, size * map[y][x], 0, size, size, (x * size), (y * size), size, size);
+          ctx.drawImage(tiles, 
+            size * Math.floor(map[y][x] % tpr), size * Math.floor(map[y][x] / tpr), 
+            size, size, 
+            (x * size), (y * size), 
+            size, size);
         //}
       }
     }
@@ -526,25 +626,25 @@ function rendersprite(sprite){
   //set the animation sequence
   var sequence;
   if(sprite.dir == "north"){
-    if(sprite.action == "idle")
+    if(sprite.action == "idle" && !sprite.board)
       sequence = sprite.idleNorth;
     else 
       sequence = sprite.moveNorth;
   }
   else if(sprite.dir == "south"){
-    if(sprite.action == "idle")
+    if(sprite.action == "idle"  && !sprite.board)
       sequence = sprite.idleSouth;
     else 
       sequence = sprite.moveSouth;
   }
   else if(sprite.dir == "west"){
-    if(sprite.action == "idle")
+    if(sprite.action == "idle"  && !sprite.board)
       sequence = sprite.idleWest;
     else 
       sequence = sprite.moveWest;
   }
   else if(sprite.dir == "east"){
-    if(sprite.action == "idle")
+    if(sprite.action == "idle"  && !sprite.board)
       sequence = sprite.idleEast;
     else 
       sequence = sprite.moveEast;
@@ -558,7 +658,7 @@ function rendersprite(sprite){
   var offY = (sprite.board ? sprite.hover_offsetY : sprite.offsetY);
   var sprIMG = (sprite.board ? sprite.hover_img : sprite.img);
 
-  if(sprite.show){
+  if(sprite.show && sprite.ready){
     ctx.drawImage(sprIMG, 
     col * sprite.width, row * curheight, 
     sprite.width, curheight,
@@ -575,6 +675,7 @@ function renderPlace(build){
 
 
 function render(){
+  checkRender();
   ctx.save();
 
   ctx.translate(-camera.x, -camera.y);
@@ -596,10 +697,11 @@ function render(){
     }
   }
 
-  drawsprite(nat);
   for(var c=0;c<npcs.length;c++){
     drawsprite(npcs[c]);
   }
+
+  drawsprite(nat);
 
   for(var b=0;b<buildings.length;b++){
     if(!buildings[b].thru){
@@ -615,9 +717,17 @@ function render(){
 ////////////////////  GAME FUNCTIONS  //////////////////
 
 
-function init(){
-  blankMap("q2");
-  nextLevel();
+function init(name, quad, sect, x, y){
+  //look for next leveldata
+  var lvl;
+  for(var a = 0;a<levelList.length;a++){
+    var bLvl = levelList[a];
+    if(bLvl.name === name && bLvl.quad === quad && bLvl.sect === sect){
+      lvl = bLvl;
+      break;
+    }
+  }
+  loadLevel(lvl, x*size, y*size);
 }
 
 function keyboard(){
