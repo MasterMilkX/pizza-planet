@@ -369,7 +369,7 @@ function travel(sprite){
 
     //travel north
     if(sprite.dir == "north"){
-      if(Math.floor(sprite.y) > (sprite.initPos - size) && !hitWall(nat)){
+      if(Math.floor(sprite.y) > (sprite.initPos - size) && !hitWall(nat) && !hitGroup(nat, npcs)){
         sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), -sprite.velY, (sprite.initPos - size));
         sprite.moving = true;
@@ -379,7 +379,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "south"){
-      if(Math.floor(sprite.y) < (sprite.initPos + size) && !hitWall(nat)){
+      if(Math.floor(sprite.y) < (sprite.initPos + size) && !hitWall(nat) && !hitGroup(nat, npcs)){
         sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), sprite.velY, (sprite.initPos + size));
         sprite.moving = true;
@@ -389,7 +389,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "east"){
-      if(Math.floor(sprite.x) < (sprite.initPos + size) && !hitWall(nat)){
+      if(Math.floor(sprite.x) < (sprite.initPos + size) && !hitWall(nat) && !hitGroup(nat, npcs)){
         sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), sprite.velX, (sprite.initPos + size));
         sprite.moving = true;
@@ -399,7 +399,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "west"){
-      if(Math.floor(sprite.x) > (sprite.initPos - size) && !hitWall(nat)){
+      if(Math.floor(sprite.x) > (sprite.initPos - size) && !hitWall(nat) && !hitGroup(nat, npcs)){
         sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), -sprite.velX, (sprite.initPos - size));
         sprite.moving = true;
@@ -510,6 +510,42 @@ function hitWall(person){
     return true;
   else
     return false;
+}
+
+function hitGroup(person, group){
+  //get the positions
+  var rx;
+  var ry;
+  if(person.dir === "north" || person.dir === "west"){
+    rx = Math.ceil(person.x / size);
+    ry = Math.ceil(person.y / size);
+  }else if(person.dir === "south" || person.dir === "east"){
+    rx = Math.floor(person.x / size);
+    ry = Math.floor(person.y / size);
+  }
+  
+
+  //edge of map = undecided
+  if(rx-1 < 0 || rx+1 >= cols || ry-1 < 0 || ry+1 >= cols)
+    return;
+
+  //decide if adjacent to person
+  var ouch = false;
+  for(var i=0;i<group.length;i++){
+    var g = group[i];
+    gx = Math.floor(g.x / size);
+    gy = Math.floor(g.y / size);
+
+    if(person.dir == "north" && (rx == gx) && (ry-1 == gy))
+      ouch = true;
+    else if(person.dir == "south" && (rx == gx) && (ry+1 == gy))
+      ouch = true;
+    else if(person.dir == "east" && (rx+1 == gx) && (ry == gy))
+      ouch = true;
+    else if(person.dir == "west" && (rx-1 == gx) && (ry == gy))
+      ouch = true;
+  }
+  return ouch;
 }
 
 ///////////////////   CAMERA  /////////////////////
@@ -676,7 +712,7 @@ function renderPlace(build){
 
 function render(){
   checkRender();
-  ctx.save();
+  //ctx.save();
 
   ctx.translate(-camera.x, -camera.y);
 
@@ -697,11 +733,18 @@ function render(){
     }
   }
 
+
   for(var c=0;c<npcs.length;c++){
-    drawsprite(npcs[c]);
+    if(nat.y >= npcs[c].y)
+      drawsprite(npcs[c]);
   }
 
   drawsprite(nat);
+
+  for(var c=0;c<npcs.length;c++){
+    if(nat.y < npcs[c].y)
+      drawsprite(npcs[c]);
+  }
 
   for(var b=0;b<buildings.length;b++){
     if(!buildings[b].thru){
@@ -709,8 +752,8 @@ function render(){
     }
   }
 
-  ctx.restore();
-  requestAnimationFrame(render);
+  //ctx.restore();
+ // requestAnimationFrame(render);
 
 }
 
@@ -744,28 +787,39 @@ function keyboard(){
   
 }
 
-
+var lastKeyUp = 0;
 function main(){
   requestAnimationFrame(main);
   canvas.focus();
+  render();
 
   travel(nat);
   panCamera();
   quadChange(curQuad);
 
-  if(hitWall(nat))
-    console.log("OW!");
-
    // key events
   document.body.addEventListener("keydown", function (e) {
-      keys[e.keyCode] = true;
+      var keyDownAt = new Date();
+        setTimeout(function(){
+          if(keyDownAt > lastKeyUp){
+            keys[e.keyCode] = true;
+          }else{
+            if(e.keyCode == upKey){
+              nat.dir = "north";
+            }else if(e.keyCode == downKey){
+              nat.dir = "south";
+            }else if(e.keyCode == leftKey){
+              nat.dir = "west";
+            }else if(e.keyCode == rightKey){
+              nat.dir = "east";
+            }
+          }
+        }, 100);
+      
   });
   document.body.addEventListener("keyup", function (e) {
       keys[e.keyCode] = false;
-  });
-  document.body.addEventListener("keypress", function (e){
-    if(e.keyCode == 122)
-      nat.board = !nat.board;
+      lastKeyUp = new Date();
   });
   keyboard();
 
@@ -780,4 +834,4 @@ function main(){
 
 }
 main();
-render();
+

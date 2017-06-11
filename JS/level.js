@@ -108,7 +108,7 @@ var levelList = [
 			[]),
 
 	//interior places
-	new levelDat("vals_pizza_bottom", "q2", "NEWTON",
+	new levelDat("vals", "q2", "NEWTON",
 			[],
 			[new NPC("mr_val", 12, 7)])
 ];
