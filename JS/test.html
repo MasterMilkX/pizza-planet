@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>TEST JS</title>
+<style>
+
+</style>
+</head>
+<body>
+</body>
+<p id="output">Press a Key!</p>
+<script>
+var key = false;  
+document.body.addEventListener('keydown',function(e){
+    key = true;
+});    
+document.body.addEventListener('keyup',function(e){
+    key = false;
+});
+
+x = 100;
+var inty = 0;
+function gameLoop() {
+    if(key && inty == 0){
+        if(inty == 0)
+        	inty = setInterval(function(){x+=1}, 250);
+    }else if(!key){
+    	clearInterval(inty);
+    	inty = 0;
+    	x=0;
+    }
+
+    // redraw/reposition your object here
+    // also redraw/animate any objects not controlled by the user
+
+    setTimeout(gameLoop, 10);
+
+    document.getElementById("output").innerHTML = x + " " + inty;
+}    
+gameLoop();
+</script>
+</html>

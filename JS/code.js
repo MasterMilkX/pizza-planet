@@ -133,11 +133,24 @@ var camera = {
 var npcs = [];
 
 //controls
+function key(code){
+  this.code = code;
+  this.press = false;
+  this.tick = 0;
+}
+
+var upKey = 38;     //[Up]
+var leftKey = 37;   //[Left]
+var rightKey = 39;  //[Rigt]
+var downKey = 40;   //[Down]
+var moveKeySet = [upKey, leftKey, rightKey, downKey];
+
+var z_key = 90;   //[Z]
+var x_key = 88;   //[X]
+var a_key = 65;   //[A]
+var s_key = 83;   //[S]
+var actionKeySet = [z_key, x_key, a_key, s_key];
 var keys = [];
-var upKey = 38; //[Up]
-var leftKey = 37;
-var rightKey = 39;
-var downKey = 40;
 
 //////////////////    LEVEL FUNCTIONS   //////////////
 
@@ -240,9 +253,7 @@ function loadMap(lvlmap){
     ctx.drawImage(bgPNG, 0, 0);
   };
 
-  //reset map
-  console.log("R: " + rows + " C:" + cols)
-
+  //load the map from mapList
   map = [];
   level_loaded = false;
   for(var y = 0; y < rows; y++){
@@ -254,6 +265,7 @@ function loadMap(lvlmap){
     map.push(r);
   }
 
+  //ready the tiles
   tiles.src = lvlmap.tileset.src;
   tilesReady = lvlmap.ready;
   tpr = lvlmap.tpr;
@@ -757,6 +769,60 @@ function render(){
 
 }
 
+////////////////////   KEY FUNCTIONS  //////////////////
+
+
+
+// key events
+var keyTick = 0;
+var kt = null;
+
+function ticktock(){
+  keyTick+=1
+}
+document.body.addEventListener("keydown", function (e) {
+  if((moveKeySet.indexOf(e.keyCode) != -1)){
+    keys[e.keyCode] = true;
+  }
+});
+
+document.body.addEventListener("keyup", function (e) {
+  if(moveKeySet.indexOf(e.keyCode) != -1){
+    keys[e.keyCode] = false;
+  }
+});
+
+function anyKey(){
+  return (keys[upKey] || keys[downKey] || keys[leftKey] || keys[rightKey])
+}
+
+function keyboard(){
+  if(!nat.moving){
+    if(keyTick < 1){
+      if(keys[leftKey])         //left key
+        nat.dir = "west";
+      else if(keys[rightKey])    //right key
+        nat.dir = "east";
+      else if(keys[upKey])    //upkey
+        nat.dir = "north";
+      else if(keys[downKey])    //downkey
+        nat.dir = "south";
+    }else{
+      if(keys[leftKey])         //left key
+        goWest(nat);
+      else if(keys[rightKey])    //right key
+        goEast(nat);
+      else if(keys[upKey])    //upkey
+        goNorth(nat);
+      else if(keys[downKey])    //downkey
+        goSouth(nat);
+    }
+  }
+  
+}
+
+
+
 ////////////////////  GAME FUNCTIONS  //////////////////
 
 
@@ -773,21 +839,7 @@ function init(name, quad, sect, x, y){
   loadLevel(lvl, x*size, y*size);
 }
 
-function keyboard(){
-  if(!nat.moving){
-    if(keys[leftKey])
-      goWest(nat);
-    else if(keys[rightKey])
-      goEast(nat);
-    else if(keys[upKey])
-      goNorth(nat);
-    else if(keys[downKey])
-      goSouth(nat);
-  }
-  
-}
 
-var lastKeyUp = 0;
 function main(){
   requestAnimationFrame(main);
   canvas.focus();
@@ -797,30 +849,15 @@ function main(){
   panCamera();
   quadChange(curQuad);
 
-   // key events
-  document.body.addEventListener("keydown", function (e) {
-      var keyDownAt = new Date();
-        setTimeout(function(){
-          if(keyDownAt > lastKeyUp){
-            keys[e.keyCode] = true;
-          }else{
-            if(e.keyCode == upKey){
-              nat.dir = "north";
-            }else if(e.keyCode == downKey){
-              nat.dir = "south";
-            }else if(e.keyCode == leftKey){
-              nat.dir = "west";
-            }else if(e.keyCode == rightKey){
-              nat.dir = "east";
-            }
-          }
-        }, 100);
-      
-  });
-  document.body.addEventListener("keyup", function (e) {
-      keys[e.keyCode] = false;
-      lastKeyUp = new Date();
-  });
+  var akey = anyKey();
+  if(akey && kt == 0){
+    if(kt == 0)
+      kt = setInterval(function(){keyTick+=1}, 100);
+  }else if(!akey){
+    clearInterval(kt);
+    kt = 0;
+    keyTick=0;
+  }
   keyboard();
 
   var pixX = Math.round(nat.x / size);
@@ -830,8 +867,12 @@ function main(){
   var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
+  settings += " --- " + keyTick + " | " + akey;
   document.getElementById('botSettings').innerHTML = settings;
 
+  //console.log(keys);
+
 }
+
 main();
 
