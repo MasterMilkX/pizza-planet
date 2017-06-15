@@ -1,3 +1,53 @@
+//////////////////// ITEM ///////////////////
+
+function getIMGITEM(name){
+	var itemIMG = new Image();
+	itemIMG.src = "../items/" + name + ".png";
+	var itemReady = false;
+	itemIMG.onload = function(){itemReady = true;};
+
+	this.img = itemIMG;
+	this.ready = itemReady;
+}
+
+function animateITEM(w, h, sequence, fps, fpr){
+	this.width = w;
+	this.height = h;
+	this.sequence = sequence;
+	this.fps = fps;            //frame speed
+  	this.fpr = fpr;            //# of frames per row
+  	this.ct = 0;
+  	this.curFrame = 0;
+  	this.seqlength = sequence.length;
+}
+
+function ITEM(name, x, y, ba, text, thru=false, show=true, animation=null, trigger=null){
+	var set = new getIMGITEM(name);
+
+	this.name = name;
+	this.x = x;
+	this.y = y;
+	this.area = ba;
+	this.text = text;
+	this.thru = thru;
+	this.show = show;
+	this.animation = animation;
+	this.trigger = trigger;
+
+	this.img = set.img;
+	this.ready = set.ready;
+}
+
+//area for collision (x and y are relative to the object starting from the top right)
+function boundArea(x, y, w, h){
+	this.x = x;
+	this.y = y;
+	this.w = w;
+	this.h = h;
+}
+
+
+
 ////////////////////  NPC  //////////////////
 
 
@@ -53,6 +103,7 @@ function NPC(name, x, y){
   this.moveEast = [9,10,11,10];
   this.curFrame = 0;
   this.ct = 0;
+  this.seqlength = 4;
 }
 
 ////////////////////////  PLACE  ///////////////////////////
@@ -84,31 +135,44 @@ function PLACE(name, x, y, tx, ty, thru){
 
 /////////////////////// LEVEL ////////////////////
 
-function levelDat(name, quad, sect, buildings, chars){
+function levelDat(name, quad, sect, buildings, chars, items){
 	this.name = name;
 	this.quad = quad;
 	this.sect = sect;
 	this.buildings = buildings;
 	this.chars = chars;
+	this.items = items;
 }
 
 var levelList = [
 	//moon places
 	new levelDat("moon", "q1", "NEWTON",
 			[new PLACE("capsule_crash", 10, 15, [5,6], [7], false)],
+			[],
 			[]),
 	new levelDat("moon", "q2", "NEWTON", 
 			[new PLACE("vals_ship", 24, 15, [5,6], [7], false)], 
+			[],
 			[]),
 	new levelDat("moon", "q3", "NEWTON",
 			[],
-			[new NPC("damon", 12, 7)]),
+			[new NPC("damon", 12, 7)],
+			[]),
 	new levelDat("moon", "q4", "NEWTON",
+			[],
 			[],
 			[]),
 
 	//interior places
 	new levelDat("vals", "q2", "NEWTON",
 			[],
-			[new NPC("mr_val", 12, 7)])
+			[new NPC("mr_val", 12, 7)],
+			[new ITEM("oven", 5, 4, new boundArea(0, 2, 3, 1), "WHOA! That's a hot pizza!", true),
+				new ITEM("pizza_stack_tall", 8, 4, new boundArea(0, 2, 1, 1), "A leaning tower of pizza", true),
+				new ITEM("pizza_stack_med", 9, 5, new boundArea(0, 1, 1, 1), "A leaning tower of pizza", true),
+				new ITEM("pizza_pyramid_med", 10, 6, new boundArea(0, 0, 2, 1), "The great pyramid of pizza", true),
+				new ITEM("pizza_stack_layer3", 4, 10, new boundArea(0, 1, 1, 2), "Lots of boxes"),
+				new ITEM("pizza_stack_layer3", 4, 12, new boundArea(0, 1, 1, 2), "Lots of boxes"),
+				new ITEM("pizza_stack_layer3", 5, 11, new boundArea(0, 1, 1, 2), "Lots of boxes")
+				])
 ];

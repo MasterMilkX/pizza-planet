@@ -25,8 +25,6 @@ var boundVal = 1;
 var triggerVal = 4;
 var collideTiles = [1];
 
-var buildings = [];
-
 //pre-set map
 /*
 map = [
@@ -118,6 +116,7 @@ var nat = {
   moveWest : [6,7,8,7],
   moveEast : [9,10,11,10],
 
+  seqlength : 4,
   curFrame : 0,
   ct : 0
 };
@@ -128,9 +127,6 @@ var camera = {
   x : 0,
   y : 0
 };
-
-//npcs
-var npcs = [];
 
 //controls
 function key(code){
@@ -151,6 +147,11 @@ var a_key = 65;   //[A]
 var s_key = 83;   //[S]
 var actionKeySet = [z_key, x_key, a_key, s_key];
 var keys = [];
+
+//add-ins
+var npcs = [];
+var buildings = [];
+var items = [];
 
 //////////////////    LEVEL FUNCTIONS   //////////////
 
@@ -176,6 +177,11 @@ function loadLevel(aLevel, px, py){
   //make new characters
   for(var c=0;c<aLevel.chars.length;c++){
     npcs.push(aLevel.chars[c]);
+  }
+
+  //add new items
+  for(var i=0;i<aLevel.items.length;i++){
+    items.push(aLevel.items[i]);
   }
 
   //make a moon level
@@ -381,7 +387,7 @@ function travel(sprite){
 
     //travel north
     if(sprite.dir == "north"){
-      if(Math.floor(sprite.y) > (sprite.initPos - size) && !hitWall(nat) && !hitGroup(nat, npcs)){
+      if(Math.floor(sprite.y) > (sprite.initPos - size) && !hitWall(nat) && !natHit()){
         sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), -sprite.velY, (sprite.initPos - size));
         sprite.moving = true;
@@ -391,7 +397,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "south"){
-      if(Math.floor(sprite.y) < (sprite.initPos + size) && !hitWall(nat) && !hitGroup(nat, npcs)){
+      if(Math.floor(sprite.y) < (sprite.initPos + size) && !hitWall(nat) && !natHit()){
         sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), sprite.velY, (sprite.initPos + size));
         sprite.moving = true;
@@ -401,7 +407,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "east"){
-      if(Math.floor(sprite.x) < (sprite.initPos + size) && !hitWall(nat) && !hitGroup(nat, npcs)){
+      if(Math.floor(sprite.x) < (sprite.initPos + size) && !hitWall(nat) && !natHit()){
         sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), sprite.velX, (sprite.initPos + size));
         sprite.moving = true;
@@ -411,7 +417,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "west"){
-      if(Math.floor(sprite.x) > (sprite.initPos - size) && !hitWall(nat) && !hitGroup(nat, npcs)){
+      if(Math.floor(sprite.x) > (sprite.initPos - size) && !hitWall(nat) && !natHit()){
         sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), -sprite.velX, (sprite.initPos - size));
         sprite.moving = true;
@@ -524,7 +530,7 @@ function hitWall(person){
     return false;
 }
 
-function hitGroup(person, group){
+function hitNPC(person){
   //get the positions
   var rx;
   var ry;
@@ -535,29 +541,72 @@ function hitGroup(person, group){
     rx = Math.floor(person.x / size);
     ry = Math.floor(person.y / size);
   }
-  
-
-  //edge of map = undecided
-  if(rx-1 < 0 || rx+1 >= cols || ry-1 < 0 || ry+1 >= cols)
-    return;
 
   //decide if adjacent to person
   var ouch = false;
-  for(var i=0;i<group.length;i++){
-    var g = group[i];
-    gx = Math.floor(g.x / size);
-    gy = Math.floor(g.y / size);
+  for(var i=0;i<npcs.length;i++){
+    var n = npcs[i];
+    nx = Math.floor(n.x / size);
+    ny = Math.floor(n.y / size);
 
-    if(person.dir == "north" && (rx == gx) && (ry-1 == gy))
+    if(person.dir == "north" && (rx == nx) && (ry-1 == ny))
       ouch = true;
-    else if(person.dir == "south" && (rx == gx) && (ry+1 == gy))
+    else if(person.dir == "south" && (rx == nx) && (ry+1 == ny))
       ouch = true;
-    else if(person.dir == "east" && (rx+1 == gx) && (ry == gy))
+    else if(person.dir == "east" && (rx+1 == nx) && (ry == ny))
       ouch = true;
-    else if(person.dir == "west" && (rx-1 == gx) && (ry == gy))
+    else if(person.dir == "west" && (rx-1 == nx) && (ry == ny))
       ouch = true;
   }
   return ouch;
+}
+
+function hitItem(person){
+   //get the positions
+  var rx;
+  var ry;
+  if(person.dir === "north" || person.dir === "west"){
+    rx = Math.ceil(person.x / size);
+    ry = Math.ceil(person.y / size);
+  }else if(person.dir === "south" || person.dir === "east"){
+    rx = Math.floor(person.x / size);
+    ry = Math.floor(person.y / size);
+  }
+  
+  //decide if adjacent to person
+  var ouch = false;
+  for(var i=0;i<items.length;i++){
+    var t = items[i];
+    var t_ba = t.area;
+
+    //get bounding box area
+    var xArea = [];
+    for(var z=0;z<t_ba.w;z++){
+      xArea.push(t_ba.x+t.x+z);
+    }
+    var yArea = [];
+    for(var z=0;z<t_ba.h;z++){
+      yArea.push(t_ba.y+t.y+z);
+    }
+
+    //console.log(xArea + "\t" + yArea);
+
+
+    if(person.dir == "north" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry-1) !== -1))
+      ouch = true;
+    else if(person.dir == "south" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry+1) !== -1))
+      ouch = true;
+    else if(person.dir == "east" && (xArea.indexOf(rx+1) !== -1) && (yArea.indexOf(ry) !== -1))
+      ouch = true;
+    else if(person.dir == "west" && (xArea.indexOf(rx-1) !== -1) && (yArea.indexOf(ry) !== -1))
+      ouch = true;
+  }
+  return ouch;
+
+}
+
+function natHit(){
+  return (hitNPC(nat) || hitItem(nat));
 }
 
 ///////////////////   CAMERA  /////////////////////
@@ -627,6 +676,15 @@ function checkRender(){
       }
     }
   }
+
+  //item
+  for(var i=0;i<items.length;i++){
+    if(!items[i].ready){
+      if(items[i].img.width !== 0){
+        items[i].ready = true;
+      }
+    }
+  }
 }
 
 //rendering function for the map
@@ -653,20 +711,9 @@ function drawsprite(sprite){
 }
 
 function updatesprite(sprite){
-  //set the animation sequence
-  var sequence;
-  if(sprite.dir == "north")
-    sequence = sprite.moveNorth;
-  else if(sprite.dir == "south")
-    sequence = sprite.moveSouth;
-  else if(sprite.dir == "west")
-    sequence = sprite.moveWest;
-  else if(sprite.dir == "east")
-    sequence = sprite.moveEast;
-    
   //update the frames
   if(sprite.ct == (sprite.fps - 1))
-    sprite.curFrame = (sprite.curFrame + 1) % sequence.length;
+    sprite.curFrame = (sprite.curFrame + 1) % sprite.seqlength;
     
   sprite.ct = (sprite.ct + 1) % sprite.fps;
 }
@@ -721,6 +768,31 @@ function renderPlace(build){
   }
 }
 
+function drawItem(item){
+  if(item.ready && item.show){
+    if(item.animation !== null){
+      var itemANIM = item.animation;
+
+      //get the row and col of the current frame
+      var row = Math.floor(itemANIM.sequence[itemANIM.curFrame] / itemANIM.fpr);
+      var col = Math.floor(itemANIM.sequence[itemANIM.curFrame] % itemANIM.fpr);
+
+      ctx.drawImage(item.img, 
+      col * itemANIM.width, row * itemANIM.height, 
+      itemANIM.width, itemANIM.height,
+      item.x, item.y, 
+      itemANIM.width, itemANIM.height);
+    }else{
+      ctx.drawImage(item.img, item.x*size, item.y*size);
+    }
+  }
+}
+
+function renderItem(item){
+  if(item.animation !== null)
+    updatesprite(item.animation);
+  drawItem(item);
+}
 
 function render(){
   checkRender();
@@ -739,29 +811,46 @@ function render(){
   //draw the map
   drawMap();
 
+  //draw the buildings if behind nat
+  /*
   for(var b=0;b<buildings.length;b++){
     if(buildings[b].thru){
       renderPlace(buildings[b]);
     }
   }
+  */
 
+  for(var i=0;i<items.length;i++){
+    if(items[i].thru)
+      renderItem(items[i]);
+  }
 
+  //if npc behind nat
   for(var c=0;c<npcs.length;c++){
     if(nat.y >= npcs[c].y)
       drawsprite(npcs[c]);
   }
 
+  //draw nat
   drawsprite(nat);
 
+  //if npc in front of nat
   for(var c=0;c<npcs.length;c++){
     if(nat.y < npcs[c].y)
       drawsprite(npcs[c]);
   }
 
+  //draw the buildings if in front of nat
   for(var b=0;b<buildings.length;b++){
-    if(!buildings[b].thru){
+   // if(!buildings[b].thru){
       renderPlace(buildings[b]);
-    }
+   // }
+  }
+
+
+  for(var i=0;i<items.length;i++){
+    if(!items[i].thru)
+      renderItem(items[i]);
   }
 
   //ctx.restore();
@@ -852,7 +941,7 @@ function main(){
   var akey = anyKey();
   if(akey && kt == 0){
     if(kt == 0)
-      kt = setInterval(function(){keyTick+=1}, 100);
+      kt = setInterval(function(){keyTick+=1}, 75);
   }else if(!akey){
     clearInterval(kt);
     kt = 0;
