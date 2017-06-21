@@ -5,11 +5,13 @@ Places and People
 	- Mr. Val : Alien
 2. Laundromat
 	- Old lady : Human
+	- Guy in underwear : Robot
 3. Theater
 	** Nostalgic Pizza
 	- Singer : Human
 	- Bassist : Alien
 	- Drummer : Robot
+	- Keyboardist : Alien
 4. Bar
 	- Barkeep : Alien
 	- Cynic Drunk : Robot
@@ -23,19 +25,26 @@ Places and People
 7. Farmer's Market
 	- Farmer : Human
 	- Farmer Wife : Alien
+	- Grocer : Human
 8. Arcade
 	- Addiction Kid : Alien
 	- Coinkeeper : Robot
 9. Pawn Shop
 	- Shifty Guy : Alien
+	- Thief : Alien
 10. Handyman
-	- Builder : Robot
+	- Builder 1 : Robot
+	- Builder 2 : Human
 11. Library
 	- Librarian : Human
+	- Assistant : Robot
 12. Nat and Ash's Ship 
 	- Nat : Robot
 	- Ash : Human
 
-Humans : 7
-Aliens : 7
-Robots : 7
+Humans : 8 (+ Ash)
+Aliens : 9
+Robots : 8 (+ Nat)
+
+25 residents
+27 total

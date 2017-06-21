@@ -167,12 +167,17 @@ var levelList = [
 	new levelDat("vals", "q2", "NEWTON",
 			[],
 			[new NPC("mr_val", 12, 7)],
-			[new ITEM("oven", 5, 4, new boundArea(0, 2, 3, 1), "WHOA! That's a hot pizza!", true),
-				new ITEM("pizza_stack_tall", 8, 4, new boundArea(0, 2, 1, 1), "A leaning tower of pizza", true),
-				new ITEM("pizza_stack_med", 9, 5, new boundArea(0, 1, 1, 1), "A leaning tower of pizza", true),
-				new ITEM("pizza_pyramid_med", 10, 6, new boundArea(0, 0, 2, 1), "The great pyramid of pizza", true),
-				new ITEM("pizza_stack_layer3", 4, 10, new boundArea(0, 1, 1, 2), "Lots of boxes"),
-				new ITEM("pizza_stack_layer3", 4, 12, new boundArea(0, 1, 1, 2), "Lots of boxes"),
-				new ITEM("pizza_stack_layer3", 5, 11, new boundArea(0, 1, 1, 2), "Lots of boxes")
+			[new ITEM("oven", 5, 4, new boundArea(0, 2, 3, 1), ["WHOA! That's a hot pizza!"], true),
+				new ITEM("pizza_stack_tall", 8, 4, new boundArea(0, 2, 1, 1), ["A leaning tower of pizza"], true),
+				new ITEM("pizza_stack_med", 9, 5, new boundArea(0, 1, 1, 1), ["A leaning tower of pizza"], true),
+				new ITEM("pizza_stack_med", 4, 12, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
+				new ITEM("pizza_stack_layer3", 4, 12, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
+				new ITEM("pizza_stack_layer3", 5, 11, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
+				new ITEM("pizza_stack_med", 6, 9, new boundArea(0, 0, 1, 1), ["Mmm... pizza...."]),
+				new ITEM("pizza_mtn", 4, 8, new boundArea(0, 0, 2, 3), ["How high can you get for this mountain of pizza?"]),
+				new ITEM("counter_top", 13, 5, new boundArea(0, 1, 2, 1), null, true),
+				new ITEM("counter_right", 15, 5, new boundArea(0, 0, 1, 4), null),
+				new ITEM("fridge", 10, 5, new boundArea(0, 0, 3, 2), ["So cold..."], true),
+				new ITEM("phone_table", 15, 9, new boundArea(0, 0, 1, 2), ["*RIIIIING*", "Is this the Krusty Krab?", "*CLICK*"])
 				])
 ];

@@ -96,6 +96,10 @@ var nat = {
   fpr : 12,            //# of frames per row
   show : true,
 
+  //other properties
+  interact : false,
+  other : null,
+
   //hoverboard
   board : false, 
   hover_height: 24,
@@ -127,6 +131,19 @@ var camera = {
   x : 0,
   y : 0
 };
+
+//gui
+var dialogIMG = new Image();
+dialogIMG.src = '../gui/dialog.png';
+var dialogReady = false;
+dialogIMG.onload = function(){dialogReady = true;}
+
+var dialogue = {
+  show : false,
+  text : "",
+  index : 0
+}
+
 
 //controls
 function key(code){
@@ -562,7 +579,7 @@ function hitNPC(person){
 }
 
 function hitItem(person){
-   //get the positions
+  //get the positions
   var rx;
   var ry;
   if(person.dir === "north" || person.dir === "west"){
@@ -794,6 +811,14 @@ function renderItem(item){
   drawItem(item);
 }
 
+function drawDialog(){
+  if(dialogue.show){
+    ctx.drawImage(dialogIMG, camera.x, camera.y);
+    ctx.font = "20px Fixedsys"
+    ctx.fillText(dialogue.text[dialogue.index], camera.x + 20, camera.y + 260)
+  }
+}
+
 function render(){
   checkRender();
   //ctx.save();
@@ -853,6 +878,8 @@ function render(){
       renderItem(items[i]);
   }
 
+  drawDialog();
+
   //ctx.restore();
  // requestAnimationFrame(render);
 
@@ -864,7 +891,7 @@ function render(){
 
 // key events
 var keyTick = 0;
-var kt = null;
+var kt = null; 
 
 function ticktock(){
   keyTick+=1
@@ -872,12 +899,17 @@ function ticktock(){
 document.body.addEventListener("keydown", function (e) {
   if((moveKeySet.indexOf(e.keyCode) != -1)){
     keys[e.keyCode] = true;
+  }else if(actionKeySet.indexOf(e.keyCode) != -1){
+    keys[e.keyCode] = true;
   }
 });
 
 document.body.addEventListener("keyup", function (e) {
   if(moveKeySet.indexOf(e.keyCode) != -1){
     keys[e.keyCode] = false;
+  }else if(actionKeySet.indexOf(e.keyCode) != -1){
+    keys[e.keyCode] = false;
+    reInteract = true;
   }
 });
 
@@ -885,8 +917,8 @@ function anyKey(){
   return (keys[upKey] || keys[downKey] || keys[leftKey] || keys[rightKey])
 }
 
-function keyboard(){
-  if(!nat.moving){
+function moveKeys(){
+  if(!nat.moving && !nat.interact){
     if(keyTick < 1){
       if(keys[leftKey])         //left key
         nat.dir = "west";
@@ -907,7 +939,31 @@ function keyboard(){
         goSouth(nat);
     }
   }
-  
+
+}
+
+
+var reInteract = false;
+function actionKeys(){
+  if(keys[z_key] && !nat.interact && !nat.moving && reInteract){
+    for(var i=0;i<items.length;i++){
+      if(canInteract(nat, items[i]) && items[i].text){
+        reInteract = false;
+        nat.other = items[i];
+        nat.interact = true;
+        dialogue.text = items[i].text;
+        dialogue.index = 0;
+        return;
+      }
+    }
+  }else if(keys[z_key] && nat.interact && reInteract){
+    reInteract = false;
+    if(dialogue.index +1 == nat.other.text.length){
+      nat.interact = false;
+    }else{
+      dialogue.index++;
+    }
+  }
 }
 
 
@@ -938,6 +994,11 @@ function main(){
   panCamera();
   quadChange(curQuad);
 
+  if(nat.interact){
+    dialogue.show = true;
+  }else
+    dialogue.show = false;
+
   var akey = anyKey();
   if(akey && kt == 0){
     if(kt == 0)
@@ -947,7 +1008,8 @@ function main(){
     kt = 0;
     keyTick=0;
   }
-  keyboard();
+  moveKeys();
+  actionKeys();
 
   var pixX = Math.round(nat.x / size);
   var pixY = Math.round(nat.y / size);
@@ -956,7 +1018,7 @@ function main(){
   var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
-  settings += " --- " + keyTick + " | " + akey;
+  settings += " --- " + keyTick + " | " + keys[z_key];
   document.getElementById('botSettings').innerHTML = settings;
 
   //console.log(keys);

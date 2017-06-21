@@ -31,7 +31,7 @@
 	- Buy furniture (-$10-$30, +1 LOVE pts, new furniture for ship)
 	- Fix hoverboard (-$20, upgraded hoverboard)
 11. Library
-	- Read (Info on money or conversation topics)
+	- Read (Info on conversation topics, Shakespeare, or guitar songs)
 	- Check out books for Ash (+1 LOVE pt)
 12. Nat and Ash's Ship 
 	* Talk with Ash (+/-1..3 LOVE pts based on responses)

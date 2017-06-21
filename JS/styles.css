@@ -42,3 +42,9 @@ p{
 #area{
   color: #ffffff;
 }
+
+@font-face {font-family: Fixedsys; src: url('../gui/FSEX300.ttf');}
+
+#gui{
+  font-family: Fixedsys;
+}
