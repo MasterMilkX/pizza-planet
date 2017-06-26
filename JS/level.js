@@ -80,8 +80,11 @@ function NPC(name, x, y){
   this.offsetY = 4;
   this.board = false;
 
+  this.walkType = "drunk";
+  this.wt = 0;
+
   //movement
-  this.speed = 0.5;
+  this.speed = 1;
   this.initPos = 0;
   this.moving = false;
   this.x = x * 16; 
@@ -172,8 +175,8 @@ var levelList = [
 				new ITEM("pizza_stack_med", 9, 5, new boundArea(0, 1, 1, 1), ["A leaning tower of pizza"], true),
 				new ITEM("pizza_stack_med", 4, 12, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
 				new ITEM("pizza_stack_layer3", 4, 12, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
-				new ITEM("pizza_stack_layer3", 5, 11, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
-				new ITEM("pizza_stack_med", 6, 9, new boundArea(0, 0, 1, 1), ["Mmm... pizza...."]),
+				new ITEM("pizza_stack_layer3", 5, 11, new boundArea(0, 1, 1, 2), ["Lots of boxes"], true),
+				new ITEM("pizza_stack_med", 6, 9, new boundArea(0, 1, 1, 1), ["Mmm... pizza...."]),
 				new ITEM("pizza_mtn", 4, 8, new boundArea(0, 0, 2, 3), ["How high can you get for this mountain of pizza?"]),
 				new ITEM("counter_top", 13, 5, new boundArea(0, 1, 2, 1), null, true),
 				new ITEM("counter_right", 15, 5, new boundArea(0, 0, 1, 4), null),

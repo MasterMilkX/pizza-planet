@@ -141,7 +141,10 @@ dialogIMG.onload = function(){dialogReady = true;}
 var dialogue = {
   show : false,
   text : "",
-  index : 0
+  curtext : "",
+  index : 0,
+  speed : 0.4,
+  end : false
 }
 
 
@@ -404,7 +407,7 @@ function travel(sprite){
 
     //travel north
     if(sprite.dir == "north"){
-      if(Math.floor(sprite.y) > (sprite.initPos - size) && !hitWall(nat) && !natHit()){
+      if(Math.floor(sprite.y) > (sprite.initPos - size) && !collide(sprite)){
         sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), -sprite.velY, (sprite.initPos - size));
         sprite.moving = true;
@@ -414,7 +417,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "south"){
-      if(Math.floor(sprite.y) < (sprite.initPos + size) && !hitWall(nat) && !natHit()){
+      if(Math.floor(sprite.y) < (sprite.initPos + size) && !collide(sprite)){
         sprite.velY = curspeed;
         sprite.y += velControl(Math.floor(sprite.y), sprite.velY, (sprite.initPos + size));
         sprite.moving = true;
@@ -424,7 +427,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "east"){
-      if(Math.floor(sprite.x) < (sprite.initPos + size) && !hitWall(nat) && !natHit()){
+      if(Math.floor(sprite.x) < (sprite.initPos + size) && !collide(sprite)){
         sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), sprite.velX, (sprite.initPos + size));
         sprite.moving = true;
@@ -434,7 +437,7 @@ function travel(sprite){
         sprite.moving = false;
       }
     }else if(sprite.dir == "west"){
-      if(Math.floor(sprite.x) > (sprite.initPos - size) && !hitWall(nat) && !natHit()){
+      if(Math.floor(sprite.x) > (sprite.initPos - size) && !collide(sprite)){
         sprite.velX = curspeed;
         sprite.x += velControl(Math.floor(sprite.x), -sprite.velX, (sprite.initPos - size));
         sprite.moving = true;
@@ -445,6 +448,44 @@ function travel(sprite){
       }
     }
   }
+}
+
+
+//random walking
+function drunkardsWalk(sprite, boundary=null){
+  var dice;
+  var directions = ["north", "south", "west", "east"];
+  if(!sprite.moving){
+    var pseudoChar = {dir : directions[0], x : sprite.x, y : sprite.y}
+    //check if it would hit other character
+    do{
+      dice = Math.floor(Math.random() * directions.length);
+      pseudoChar.dir = directions.splice(dice, 1)[0];
+
+      //no options left
+      if(directions.length == 0)
+        return;
+      
+    }while(collide(pseudoChar, boundary) || hitOther(pseudoChar, nat))
+
+    //move in direction
+    if(pseudoChar.dir === "north"){
+      goNorth(sprite);
+    }else if(pseudoChar.dir === "south"){
+      goSouth(sprite);
+    }else if(pseudoChar.dir === "west"){
+      goWest(sprite);
+    }else if(pseudoChar.dir === "east"){
+      goEast(sprite);
+    }
+  }
+}
+
+function drunkardsLook(sprite){
+  var dice;
+  var directions = ["north", "south", "west", "east"];
+  dice = Math.floor(Math.random() * 4);
+  sprite.dir = directions[dice];
 }
 
 //velocity control
@@ -516,7 +557,7 @@ function map_overlap(person, val){
 
 function hitWall(person){
   if(!level_loaded)
-    return;
+    return false;
 
   //get the positions
   var rx;
@@ -563,6 +604,10 @@ function hitNPC(person){
   var ouch = false;
   for(var i=0;i<npcs.length;i++){
     var n = npcs[i];
+
+    if(n == person)
+      continue;
+
     nx = Math.floor(n.x / size);
     ny = Math.floor(n.y / size);
 
@@ -622,8 +667,82 @@ function hitItem(person){
 
 }
 
-function natHit(){
-  return (hitNPC(nat) || hitItem(nat));
+function hitBoundary(sprite, boundary){
+  //boundary in the form [x,y,w,h]
+  if(boundary == null){
+    return false;
+  }
+  
+  //get the positions
+  var rx;
+  var ry;
+  if(sprite.dir === "north" || sprite.dir === "west"){
+    rx = Math.ceil(sprite.x / size);
+    ry = Math.ceil(sprite.y / size);
+  }else if(sprite.dir === "south" || sprite.dir === "east"){
+    rx = Math.floor(sprite.x / size);
+    ry = Math.floor(sprite.y / size);
+  }
+  
+
+  //edge of map = undecided
+  if(rx-1 < 0 || rx+1 >= cols || ry-1 < 0 || ry+1 >= cols)
+    return;
+
+  //get bounding box area
+  var xArea = [];
+  for(var z=0;z<boundary.w;z++){
+    xArea.push(boundary.x+z);
+  }
+  var yArea = [];
+  for(var z=0;z<boundary.h;z++){
+    yArea.push(boundary.y+z);
+  }
+
+  //console.log(xArea + "\t" + yArea);
+
+  if(sprite.dir == "north" && ((xArea.indexOf(rx) == -1) || (yArea.indexOf(ry-1) == -1)))
+    return true;
+  else if(sprite.dir == "south" && ((xArea.indexOf(rx) == -1) || (yArea.indexOf(ry+1) == -1)))
+    return true;
+  else if(sprite.dir == "east" && ((xArea.indexOf(rx+1) == -1) || (yArea.indexOf(ry) == -1)))
+    return true;
+  else if(sprite.dir == "west" && ((xArea.indexOf(rx-1) == -1) || (yArea.indexOf(ry) == -1)))
+    return true;
+  
+  return false;
+  }
+
+function hitOther(sprite, other){
+  //get the positions
+  var rx;
+  var ry;
+  if(sprite.dir === "north" || sprite.dir === "west"){
+    rx = Math.ceil(sprite.x / size);
+    ry = Math.ceil(sprite.y / size);
+  }else if(sprite.dir === "south" || sprite.dir === "east"){
+    rx = Math.floor(sprite.x / size);
+    ry = Math.floor(sprite.y / size);
+  }
+
+  //decide if adjacent to sprite
+  var nx = Math.floor(other.x / size);
+  var ny = Math.floor(other.y / size);
+
+  if(sprite.dir == "north" && (rx == nx) && (ry-1 == ny))
+    return true;
+  else if(sprite.dir == "south" && (rx == nx) && (ry+1 == ny))
+    return true;
+  else if(sprite.dir == "east" && (rx+1 == nx) && (ry == ny))
+    return true;
+  else if(sprite.dir == "west" && (rx-1 == nx) && (ry == ny))
+    return true;
+
+  return false;
+}
+
+function collide(sprite, boundary=null){
+  return hitNPC(sprite) || hitItem(sprite) || hitWall(sprite) || hitBoundary(sprite, boundary)
 }
 
 ///////////////////   CAMERA  /////////////////////
@@ -814,9 +933,31 @@ function renderItem(item){
 function drawDialog(){
   if(dialogue.show){
     ctx.drawImage(dialogIMG, camera.x, camera.y);
-    ctx.font = "20px Fixedsys"
-    ctx.fillText(dialogue.text[dialogue.index], camera.x + 20, camera.y + 260)
+    wrapText(dialogue.text[dialogue.index], camera.x + 20, camera.y + 260)
   }
+}
+
+function wrapText(text, x, y) {
+  var maxWidth = 280;
+  var lineHeight = 30;
+  var words = text.split(' ');
+  var line = '';
+
+  for(var n = 0; n < words.length; n++) {
+    var testLine = line + words[n] + ' ';
+    var metrics = ctx.measureText(testLine);
+    var testWidth = metrics.width;
+    if (testWidth > maxWidth && n > 0) {
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    }
+    else {
+      line = testLine;
+    }
+  }
+  ctx.font = "20px Fixedsys";
+  ctx.fillText(line, x, y);
 }
 
 function render(){
@@ -893,9 +1034,6 @@ function render(){
 var keyTick = 0;
 var kt = null; 
 
-function ticktock(){
-  keyTick+=1
-}
 document.body.addEventListener("keydown", function (e) {
   if((moveKeySet.indexOf(e.keyCode) != -1)){
     keys[e.keyCode] = true;
@@ -994,14 +1132,31 @@ function main(){
   panCamera();
   quadChange(curQuad);
 
+  //npc movement
+  for(var n = 0;n<npcs.length;n++){
+    var npc = npcs[n];
+    travel(npc);
+    
+    if(npc.walkType === "drunk"){
+      if(npc.wt == 0 && !npc.moving){
+        npc.wt = setInterval(function(){
+          drunkardsWalk(npc, new boundArea(10, 7, 5, 4));
+          clearInterval(npc.wt);
+          npc.wt = 0;
+        }, (Math.random() * 2 + 1)*1000);
+      }
+    }
+    
+  }
+
   if(nat.interact){
     dialogue.show = true;
   }else
     dialogue.show = false;
 
+  //keyboard ticks
   var akey = anyKey();
   if(akey && kt == 0){
-    if(kt == 0)
       kt = setInterval(function(){keyTick+=1}, 75);
   }else if(!akey){
     clearInterval(kt);
@@ -1014,11 +1169,20 @@ function main(){
   var pixX = Math.round(nat.x / size);
   var pixY = Math.round(nat.y / size);
 
+  if(npcs.length > 0){
+    var nx = Math.round(npcs[0].x / size);
+    var ny = Math.round(npcs[0].y / size);
+  }
+
   //debug
   var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
-  settings += " --- " + keyTick + " | " + keys[z_key];
+  if(npcs.length > 0){
+    settings += " --- " + npcs[0].dir + " | " + npcs[0].initPos;
+    settings += " (" + npcs[0].x + ", " + npcs[0].y + ")";
+  }
+  
   document.getElementById('botSettings').innerHTML = settings;
 
   //console.log(keys);
