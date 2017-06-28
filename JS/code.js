@@ -1,6 +1,7 @@
 //Global variables
 /*global levelList */
 /*global mapList */
+/*global story*/
 
 //set up the canvas
 var canvas = document.createElement("canvas");
@@ -21,9 +22,10 @@ bgPNG.onload = function(){
 var map = [];
 var curQuad = "q2";
 var curSect = "NEWTON";
+var curLvl;
 var boundVal = 1;
-var triggerVal = 4;
 var collideTiles = [1];
+var teleportTriggers = [];
 
 //pre-set map
 /*
@@ -64,12 +66,12 @@ var tpr = 3; //tiles per row
 
 //player
 var natIMG  = new Image();
-natIMG.src = "../beta_sprites/nat_f.png";
+natIMG.src = "../beta_sprites/nat_" + story.gender[story.natGen] + ".png";
 var natReady = false;
 natIMG.onload = function(){natReady = true;};
 
 var hoverIMG  = new Image();
-hoverIMG.src = "../beta_sprites/hover-nat_f.png";
+hoverIMG.src = "../beta_sprites/hover-nat_" + story.gender[story.natGen] + ".png";
 var hoverReady = false;
 hoverIMG.onload = function(){hoverReady = true;};
 
@@ -99,6 +101,7 @@ var nat = {
   //other properties
   interact : false,
   other : null,
+  inventory : [],
 
   //hoverboard
   board : false, 
@@ -126,6 +129,57 @@ var nat = {
 };
 
 
+//ash image
+var ashIMG  = new Image();
+ashIMG.src = "../beta_sprites/ash_" + story.gender[story.ashGen] + ".png";
+var ashReady = false;
+ashIMG.onload = function(){ashReady = true;};
+
+//ash
+var ash = {
+  //sprite properties
+  width : 16,
+  height : 20,
+  dir : "south",
+  action: "idle",
+  img : ashIMG,
+  ready : ashReady,
+  offsetX : 0,
+  offsetY : 4,
+
+  //interaction variables
+  board : false,
+  text : "",
+  move : "drunk",
+  wt : 0,
+  interact : false,
+
+  //movement
+  speed : 1,
+  initPos : 0,
+  moving : false,
+  x : 0, 
+  y : 0,
+  velX : 0,
+  velY : 0,
+  fps : 4,            //frame speed
+  fpr : 12,           //# of frames per row
+  show : false,
+  
+  //animation
+  idleNorth : [4,4,4,4],
+  idleSouth : [1,1,1,1],
+  idleWest : [7,7,7,7],
+  idleEast : [10,10,10,10],
+  moveNorth : [3,4,5,4],
+  moveSouth : [0,1,2,1],
+  moveWest : [6,7,8,7],
+  moveEast : [9,10,11,10],
+  curFrame : 0,
+  ct : 0,
+  seqlength : 4
+};
+
 //camera
 var camera = {
   x : 0,
@@ -136,7 +190,7 @@ var camera = {
 var dialogIMG = new Image();
 dialogIMG.src = '../gui/dialog.png';
 var dialogReady = false;
-dialogIMG.onload = function(){dialogReady = true;}
+dialogIMG.onload = function(){dialogReady = true;};
 
 var dialogue = {
   show : false,
@@ -145,7 +199,7 @@ var dialogue = {
   index : 0,
   speed : 0.4,
   end : false
-}
+};
 
 
 //controls
@@ -178,16 +232,21 @@ var items = [];
 function reset(){
   npcs = [];
   buildings = [];
+  items = [];
+  teleportTriggers = [];
 }
 
 //create eeverything needed for the next level
-function loadLevel(aLevel, px, py){
+function loadLevel(aLevel, px, py, dir=null){
   //reset everything
   reset();
+  curLvl = aLevel.name;
 
   //reset nat's position
   nat.x = px;
   nat.y = py;
+  if(dir)
+    nat.dir = dir;
 
   //construct buildings
   for(var b=0;b<aLevel.buildings.length;b++){
@@ -203,6 +262,8 @@ function loadLevel(aLevel, px, py){
   for(var i=0;i<aLevel.items.length;i++){
     items.push(aLevel.items[i]);
   }
+
+  teleportTriggers = aLevel.teleports;
 
   //make a moon level
   if(aLevel.name === "moon"){
@@ -226,6 +287,7 @@ function loadLevel(aLevel, px, py){
   rows = aMap.rows;
   cols = aMap.cols;
   collideTiles = aMap.collision;
+  teleportTriggers = aLevel.teleports;
 
   loadMap(aMap);
 
@@ -243,6 +305,10 @@ function blankMoon(quadrant){
     ctx.drawImage(bgPNG, 0, 0);
   };
 
+  rows = 40;
+  cols = 40;
+  collideTiles = [boundVal];
+
   //reset map
   map = [];
   level_loaded = false;
@@ -253,6 +319,14 @@ function blankMoon(quadrant){
     }
     map.push(r);
   }
+
+  //ready the tiles
+  tiles.src = "../tilesets/moon_tiles.png";
+  tilesReady = false;
+  tiles.onload = function(){
+    tilesReady = true;
+  };
+  tpr = 3;
 
   //finish
   var edge;
@@ -370,6 +444,43 @@ function newQuadrant(new_quad, direction){
   loadLevel(lvl, nat.x, nat.y);
 }
 
+function getLevel(name){
+  //look for next leveldata
+  var lvl;
+  for(var a = 0;a<levelList.length;a++){
+    var bLvl = levelList[a];
+    if(bLvl.name === name && bLvl.quad === curQuad && bLvl.sect === curSect){
+      return bLvl;
+    }
+  }
+}
+
+function beamMeUp(){
+   //get the positions
+  var rx;
+  var ry;
+  if(nat.dir === "north" || nat.dir === "west"){
+    rx = Math.ceil(nat.x / size);
+    ry = Math.ceil(nat.y / size);
+  }else if(nat.dir === "south" || nat.dir === "east"){
+    rx = Math.floor(nat.x / size);
+    ry = Math.floor(nat.y / size);
+  }
+
+  for(var t=0;t<teleportTriggers.length;t++){
+    var trig = teleportTriggers[t];
+    if((rx == trig.ax) && (ry == trig.ay)){
+      //console.log("LET'S TELEPORT!");
+    
+      nat.initPos = 0;
+      nat.velX = nat.velY = 0;
+      nat.action = "idle";
+      nat.moving = false;
+      
+      loadLevel(getLevel(trig.dest), trig.dx*size, trig.dy*size, trig.dir);
+    }
+  }
+}
 
 //////////////////  PLAYER CONTROLS /////////////////
 
@@ -451,42 +562,7 @@ function travel(sprite){
 }
 
 
-//random walking
-function drunkardsWalk(sprite, boundary=null){
-  var dice;
-  var directions = ["north", "south", "west", "east"];
-  if(!sprite.moving){
-    var pseudoChar = {dir : directions[0], x : sprite.x, y : sprite.y}
-    //check if it would hit other character
-    do{
-      dice = Math.floor(Math.random() * directions.length);
-      pseudoChar.dir = directions.splice(dice, 1)[0];
 
-      //no options left
-      if(directions.length == 0)
-        return;
-      
-    }while(collide(pseudoChar, boundary) || hitOther(pseudoChar, nat))
-
-    //move in direction
-    if(pseudoChar.dir === "north"){
-      goNorth(sprite);
-    }else if(pseudoChar.dir === "south"){
-      goSouth(sprite);
-    }else if(pseudoChar.dir === "west"){
-      goWest(sprite);
-    }else if(pseudoChar.dir === "east"){
-      goEast(sprite);
-    }
-  }
-}
-
-function drunkardsLook(sprite){
-  var dice;
-  var directions = ["north", "south", "west", "east"];
-  dice = Math.floor(Math.random() * 4);
-  sprite.dir = directions[dice];
-}
 
 //velocity control
 function velControl(cur, value, max){
@@ -506,54 +582,9 @@ function velControl(cur, value, max){
   }
 }
 
-//determine if about to collide with an object
-function map_collide(person, val){
-  if(!level_loaded)
-    return;
 
-  //get the positions
-  var rx;
-  var ry;
-  if(person.dir === "north" || person.dir === "west"){
-    rx = Math.ceil(person.x / size);
-    ry = Math.ceil(person.y / size);
-  }else if(person.dir === "south" || person.dir === "east"){
-    rx = Math.floor(person.x / size);
-    ry = Math.floor(person.y / size);
-  }
+////////   COLLISIONS   ///////////
 
-  //edge of map undecided
-  if(rx-1 < 0 || rx+1 >= cols || ry-1 < 0 || ry+1 >= cols)
-    return;
-
-  //decide if adjacent to person
-  if(person.dir == "north" && map[ry-1][rx] == val)
-    return true;
-  else if(person.dir == "south" && map[ry+1][rx] == val)
-    return true;
-  else if(person.dir == "east" && map[ry][rx+1] == val)
-    return true;
-  else if(person.dir == "west" && map[ry][rx-1] == val)
-    return true;
-  else
-    return false;
-}
-
-//determine if colliding with an object
-function map_overlap(person, val){
-  if(!level_loaded)
-    return;
-
-  //get the positions
-  var rx = Math.round(person.x / size);
-  var ry = Math.round(person.y / size);
-
-  //decide if adjacent to person
-  if(map[ry][rx] == val)
-    return true;
-  else
-    return false;
-}
 
 function hitWall(person){
   if(!level_loaded)
@@ -586,6 +617,52 @@ function hitWall(person){
     return true;
   else
     return false;
+}
+
+function hitBuilding(person){
+  //get the positions
+  var rx;
+  var ry;
+  if(person.dir === "north" || person.dir === "west"){
+    rx = Math.ceil(person.x / size);
+    ry = Math.ceil(person.y / size);
+  }else if(person.dir === "south" || person.dir === "east"){
+    rx = Math.floor(person.x / size);
+    ry = Math.floor(person.y / size);
+  }
+  
+  //decide if adjacent to person
+  var ouch = false;
+  for(var i=0;i<buildings.length;i++){
+    var t = buildings[i];
+    var t_ba = t.area;
+
+    if(t.area == null)
+      continue;
+
+    //get bounding box area
+    var xArea = [];
+    for(var z=0;z<t_ba.w;z++){
+      xArea.push(t_ba.x+t.x+z);
+    }
+    var yArea = [];
+    for(var z=0;z<t_ba.h;z++){
+      yArea.push(t_ba.y+t.y+z);
+    }
+
+    //console.log(xArea + "\t" + yArea);
+
+
+    if(person.dir == "north" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry-1) !== -1))
+      ouch = true;
+    else if(person.dir == "south" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry+1) !== -1))
+      ouch = true;
+    else if(person.dir == "east" && (xArea.indexOf(rx+1) !== -1) && (yArea.indexOf(ry) !== -1))
+      ouch = true;
+    else if(person.dir == "west" && (xArea.indexOf(rx-1) !== -1) && (yArea.indexOf(ry) !== -1))
+      ouch = true;
+  }
+  return ouch;
 }
 
 function hitNPC(person){
@@ -640,6 +717,8 @@ function hitItem(person){
   for(var i=0;i<items.length;i++){
     var t = items[i];
     var t_ba = t.area;
+    if(t_ba == null)
+      continue;
 
     //get bounding box area
     var xArea = [];
@@ -742,8 +821,94 @@ function hitOther(sprite, other){
 }
 
 function collide(sprite, boundary=null){
-  return hitNPC(sprite) || hitItem(sprite) || hitWall(sprite) || hitBoundary(sprite, boundary)
+  return hitNPC(sprite) || hitItem(sprite) || hitWall(sprite) || hitBuilding(sprite) || hitBoundary(sprite, boundary)
 }
+
+
+////////   INTERACT   ////////
+
+
+//the interact function
+function canInteract(person, item){
+  //get the positions
+    var rx;
+    var ry;
+    if(person.dir === "north" || person.dir === "west"){
+      rx = Math.ceil(person.x / size);
+      ry = Math.ceil(person.y / size);
+    }else if(person.dir === "south" || person.dir === "east"){
+      rx = Math.floor(person.x / size);
+      ry = Math.floor(person.y / size);
+    }
+  
+    //decide if adjacent to person
+    var t = item;
+    var t_ba = item.area;
+
+    //get bounding box area
+    var xArea = [];
+    for(var z=0;z<t_ba.w;z++){
+      xArea.push(t_ba.x+t.x+z);
+    }
+    var yArea = [];
+    for(var z=0;z<t_ba.h;z++){
+      yArea.push(t_ba.y+t.y+z);
+    }
+
+    //determine if able to interact
+    var interact = false;
+    if(person.dir == "north" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry-1) !== -1))
+      interact = true;
+    else if(person.dir == "south" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry+1) !== -1))
+      interact = true;
+    else if(person.dir == "east" && (xArea.indexOf(rx+1) !== -1) && (yArea.indexOf(ry) !== -1))
+      interact = true;
+    else if(person.dir == "west" && (xArea.indexOf(rx-1) !== -1) && (yArea.indexOf(ry) !== -1))
+      interact = true;
+
+    return interact;
+}
+//the talk function
+function canTalk(person, other_pers){
+  if(other_pers.moving)
+    return false;
+
+  //get the positions
+    var rx;
+    var ry;
+    if(person.dir === "north" || person.dir === "west"){
+      rx = Math.ceil(person.x / size);
+      ry = Math.ceil(person.y / size);
+    }else if(person.dir === "south" || person.dir === "east"){
+      rx = Math.floor(person.x / size);
+      ry = Math.floor(person.y / size);
+    }
+  
+    //decide if adjacent to person
+    nx = Math.floor(other_pers.x / size);
+    ny = Math.floor(other_pers.y / size);
+
+    if(person.dir == "north" && (rx == nx) && (ry-1 == ny))
+      return true;
+    else if(person.dir == "south" && (rx == nx) && (ry+1 == ny))
+      return true;
+    else if(person.dir == "east" && (rx+1 == nx) && (ry == ny))
+      return true;
+    else if(person.dir == "west" && (rx-1 == nx) && (ry == ny))
+      return true;
+}
+
+function faceOpposite(npc){
+  if(nat.dir === "north")
+    npc.dir = "south";
+  else if(nat.dir === "south")
+    npc.dir = "north"
+  else if(nat.dir === "west")
+    npc.dir = "east"
+  else if(nat.dir === "east")
+    npc.dir = "west"
+}
+
 
 ///////////////////   CAMERA  /////////////////////
 function withinBounds(x,y){
@@ -775,7 +940,42 @@ function resetCamera(){
 
 ///////////////////    NPCS    //////////////////
 
+//random walking
+function drunkardsWalk(sprite, boundary=null){
+  var dice;
+  var directions = ["north", "south", "west", "east"];
+  if(!sprite.moving){
+    var pseudoChar = {dir : directions[0], x : sprite.x, y : sprite.y}
+    //check if it would hit other character
+    do{
+      dice = Math.floor(Math.random() * directions.length);
+      pseudoChar.dir = directions.splice(dice, 1)[0];
 
+      //no options left
+      if(directions.length == 0)
+        return;
+      
+    }while(collide(pseudoChar, boundary) || hitOther(pseudoChar, nat))
+
+    //move in direction
+    if(pseudoChar.dir === "north"){
+      goNorth(sprite);
+    }else if(pseudoChar.dir === "south"){
+      goSouth(sprite);
+    }else if(pseudoChar.dir === "west"){
+      goWest(sprite);
+    }else if(pseudoChar.dir === "east"){
+      goEast(sprite);
+    }
+  }
+}
+
+function drunkardsLook(sprite){
+  var dice;
+  var directions = ["north", "south", "west", "east"];
+  dice = Math.floor(Math.random() * 4);
+  sprite.dir = directions[dice];
+}
 
 
 ///////////////////  RENDER  //////////////////////
@@ -913,10 +1113,12 @@ function drawItem(item){
       var row = Math.floor(itemANIM.sequence[itemANIM.curFrame] / itemANIM.fpr);
       var col = Math.floor(itemANIM.sequence[itemANIM.curFrame] % itemANIM.fpr);
 
+      //console.log("r: " + row + "\tc: " + col + "\tf: " + itemANIM.curFrame)
+
       ctx.drawImage(item.img, 
       col * itemANIM.width, row * itemANIM.height, 
       itemANIM.width, itemANIM.height,
-      item.x, item.y, 
+      item.x*size, item.y*size, 
       itemANIM.width, itemANIM.height);
     }else{
       ctx.drawImage(item.img, item.x*size, item.y*size);
@@ -959,10 +1161,10 @@ function wrapText(text, x, y) {
   ctx.font = "20px Fixedsys";
   ctx.fillText(line, x, y);
 }
-
+  
 function render(){
   checkRender();
-  //ctx.save();
+  ctx.save();
 
   ctx.translate(-camera.x, -camera.y);
 
@@ -978,13 +1180,6 @@ function render(){
   drawMap();
 
   //draw the buildings if behind nat
-  /*
-  for(var b=0;b<buildings.length;b++){
-    if(buildings[b].thru){
-      renderPlace(buildings[b]);
-    }
-  }
-  */
 
   for(var i=0;i<items.length;i++){
     if(items[i].thru)
@@ -1006,22 +1201,20 @@ function render(){
       drawsprite(npcs[c]);
   }
 
-  //draw the buildings if in front of nat
-  for(var b=0;b<buildings.length;b++){
-   // if(!buildings[b].thru){
-      renderPlace(buildings[b]);
-   // }
-  }
-
-
   for(var i=0;i<items.length;i++){
     if(!items[i].thru)
       renderItem(items[i]);
   }
 
+  //draw the buildings if in front of nat
+  for(var b=0;b<buildings.length;b++){
+    renderPlace(buildings[b])
+  }
+  
+
   drawDialog();
 
-  //ctx.restore();
+  ctx.restore();
  // requestAnimationFrame(render);
 
 }
@@ -1094,10 +1287,23 @@ function actionKeys(){
         return;
       }
     }
+    for(var i=0;i<npcs.length;i++){
+      if(canTalk(nat, npcs[i]) && npcs[i].text){
+        reInteract = false;
+        nat.other = npcs[i];
+        nat.other.interact = true;
+        faceOpposite(nat.other);
+        nat.interact = true;
+        dialogue.text = npcs[i].text;
+        dialogue.index = 0;
+        return;
+      }
+    }
   }else if(keys[z_key] && nat.interact && reInteract){
     reInteract = false;
     if(dialogue.index +1 == nat.other.text.length){
       nat.interact = false;
+      nat.other.interact = false;
     }else{
       dialogue.index++;
     }
@@ -1130,17 +1336,23 @@ function main(){
 
   travel(nat);
   panCamera();
-  quadChange(curQuad);
+  beamMeUp();
+  if(curLvl === "moon")
+    quadChange(curQuad);
 
   //npc movement
   for(var n = 0;n<npcs.length;n++){
     var npc = npcs[n];
     travel(npc);
     
-    if(npc.walkType === "drunk"){
+    if(npc.interact){
+      clearInterval(npc.wt);
+      npc.wt = 0;
+    }
+    if(npc.move === "drunk_walk" && !npc.interact && npc.show){
       if(npc.wt == 0 && !npc.moving){
         npc.wt = setInterval(function(){
-          drunkardsWalk(npc, new boundArea(10, 7, 5, 4));
+          drunkardsWalk(npc, npc.boundary);
           clearInterval(npc.wt);
           npc.wt = 0;
         }, (Math.random() * 2 + 1)*1000);
@@ -1179,8 +1391,8 @@ function main(){
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
   if(npcs.length > 0){
-    settings += " --- " + npcs[0].dir + " | " + npcs[0].initPos;
-    settings += " (" + npcs[0].x + ", " + npcs[0].y + ")";
+    //settings += " --- " + canTalk(nat, npcs[0]);
+    //settings += " (" + npcs[0].x + ", " + npcs[0].y + ")";
   }
   
   document.getElementById('botSettings').innerHTML = settings;

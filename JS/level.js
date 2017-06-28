@@ -21,7 +21,7 @@ function animateITEM(w, h, sequence, fps, fpr){
   	this.seqlength = sequence.length;
 }
 
-function ITEM(name, x, y, ba, text, thru=false, show=true, animation=null, trigger=null){
+function ITEM(name, x, y, ba=null, text=null, thru=false, show=true, animation=null){
 	var set = new getIMGITEM(name);
 
 	this.name = name;
@@ -32,7 +32,6 @@ function ITEM(name, x, y, ba, text, thru=false, show=true, animation=null, trigg
 	this.thru = thru;
 	this.show = show;
 	this.animation = animation;
-	this.trigger = trigger;
 
 	this.img = set.img;
 	this.ready = set.ready;
@@ -78,10 +77,15 @@ function NPC(name, x, y){
   this.ready = set.ready;
   this.offsetX = 0;
   this.offsetY = 4;
-  this.board = false;
 
-  this.walkType = "drunk";
+  //interaction variables
+  this.board = false;
+  this.text = ["I AM ERROR"];
+  this.move = "drunk_walk";
   this.wt = 0;
+  this.interact = false;
+  this.boundArea;
+  this.storyIndex = 0;
 
   //movement
   this.speed = 1;
@@ -123,48 +127,79 @@ function getIMGBuild(name){
 
 }
 
-function PLACE(name, x, y, tx, ty, thru){
+//separate building into top half and lower half 
+// which are rendered at different layers
+
+function PLACE(name, x, y, boundary=null){
 	this.name = name;
 	this.x = x;
 	this.y = y;
-	this.tx = tx;		//entrance x
-	this.ty = ty;		//entrance y
-	this.thru = thru;
+	this.area = boundary;
 
 	var set = new getIMGBuild(name);
 	this.img = set.img;
 	this.ready = set.ready;
 }
 
+function TELEPORT(ax, ay, dest, dx, dy, dir){
+	this.ax = ax;
+	this.ay = ay;
+	this.dest = dest;
+	this.dx = dx;
+	this.dy = dy;
+	this.dir = dir;
+}
+
 /////////////////////// LEVEL ////////////////////
 
-function levelDat(name, quad, sect, buildings, chars, items){
+function levelDat(name, quad, sect, buildings, chars, items, teleports, initFunc){
 	this.name = name;
 	this.quad = quad;
 	this.sect = sect;
 	this.buildings = buildings;
 	this.chars = chars;
 	this.items = items;
+	this.teleports = teleports;
+	this.initFunc = initFunc;
 }
+
+function nothing(){return;}
+
+//function ITEM(name, x, y, ba=null, text=null, thru=false, show=true, animation=null){
+
 
 var levelList = [
 	//moon places
 	new levelDat("moon", "q1", "NEWTON",
-			[new PLACE("capsule_crash", 10, 15, [5,6], [7], false)],
+			[new PLACE("capsule_crash", 10, 15, new boundArea(2, 7, 5, 1))],
 			[],
-			[]),
+			[],
+			[],
+			nothing()
+			),
 	new levelDat("moon", "q2", "NEWTON", 
-			[new PLACE("vals_ship", 24, 15, [5,6], [7], false)], 
-			[],
-			[]),
+			[new PLACE("vals_ship", 24, 15)], 
+			[new NPC("damon", 26, 24)],
+			[new ITEM("vals_shadow", 24.5, 16.5),
+			 new ITEM("beam", 27, 22, null, null, false, true, new animateITEM(32, 32, [0,1], 25, 2))],
+			[new TELEPORT(27, 23, "vals", 10, 13, "south"),
+			 new TELEPORT(28, 23, "vals", 10, 13, "south")],
+			nothing()
+			),
 	new levelDat("moon", "q3", "NEWTON",
 			[],
 			[new NPC("damon", 12, 7)],
-			[]),
+			[],
+			[],
+			nothing()
+			),
 	new levelDat("moon", "q4", "NEWTON",
 			[],
 			[],
-			[]),
+			[],
+			[],
+			nothing()
+			),
 
 	//interior places
 	new levelDat("vals", "q2", "NEWTON",
@@ -182,5 +217,9 @@ var levelList = [
 				new ITEM("counter_right", 15, 5, new boundArea(0, 0, 1, 4), null),
 				new ITEM("fridge", 10, 5, new boundArea(0, 0, 3, 2), ["So cold..."], true),
 				new ITEM("phone_table", 15, 9, new boundArea(0, 0, 1, 2), ["*RIIIIING*", "Is this the Krusty Krab?", "*CLICK*"])
-				])
+				],
+			[new TELEPORT(13, 14, "moon", 28, 24, "south")],
+			function(){this.chars[0].boundary = new boundArea(10, 7, 5, 4);}
+
+		)
 ];
