@@ -1,3 +1,5 @@
+/*global mapList*/
+
 //////////////////// ITEM ///////////////////
 
 function getIMGITEM(name){
@@ -85,7 +87,7 @@ function NPC(name, x, y){
   this.wt = 0;
   this.interact = false;
   this.boundArea;
-  this.storyIndex = 0;
+  this.pathQueue = [];
 
   //movement
   this.speed = 1;
@@ -161,6 +163,18 @@ function levelDat(name, quad, sect, buildings, chars, items, teleports, initFunc
 	this.items = items;
 	this.teleports = teleports;
 	this.initFunc = initFunc;
+	
+	this.map = getMap(this.name);
+}
+
+function getMap(name){
+  for(var d=0;d<mapList.length;d++){
+    bMap = mapList[d];
+    if(name === bMap.name){
+      return bMap;
+    }
+  }
+  return null;
 }
 
 function nothing(){return;}
@@ -170,14 +184,14 @@ function nothing(){return;}
 
 var levelList = [
 	//moon places
-	new levelDat("moon", "q1", "NEWTON",
+	new levelDat("moon", "q1", "newton",
 			[new PLACE("capsule_crash", 10, 15, new boundArea(2, 7, 5, 1))],
 			[],
 			[],
 			[],
 			nothing()
 			),
-	new levelDat("moon", "q2", "NEWTON", 
+	new levelDat("moon", "q2", "newton", 
 			[new PLACE("vals_ship", 24, 15)], 
 			[new NPC("damon", 26, 24)],
 			[new ITEM("vals_shadow", 24.5, 16.5),
@@ -186,14 +200,14 @@ var levelList = [
 			 new TELEPORT(28, 23, "vals", 10, 13, "south")],
 			nothing()
 			),
-	new levelDat("moon", "q3", "NEWTON",
+	new levelDat("moon", "q3", "newton",
 			[],
 			[new NPC("damon", 12, 7)],
 			[],
 			[],
 			nothing()
 			),
-	new levelDat("moon", "q4", "NEWTON",
+	new levelDat("moon", "q4", "newton",
 			[],
 			[],
 			[],
@@ -202,17 +216,17 @@ var levelList = [
 			),
 
 	//interior places
-	new levelDat("vals", "q2", "NEWTON",
+	new levelDat("vals", "q2", "newton",
 			[],
 			[new NPC("mr_val", 12, 7)],
 			[new ITEM("oven", 5, 4, new boundArea(0, 2, 3, 1), ["WHOA! That's a hot pizza!"], true),
 				new ITEM("pizza_stack_tall", 8, 4, new boundArea(0, 2, 1, 1), ["A leaning tower of pizza"], true),
 				new ITEM("pizza_stack_med", 9, 5, new boundArea(0, 1, 1, 1), ["A leaning tower of pizza"], true),
-				new ITEM("pizza_stack_med", 4, 12, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
+				new ITEM("pizza_stack_med", 4, 12, new boundArea(0, 1, 1, 2), ["Someone is a master pizza box stacker"]),
 				new ITEM("pizza_stack_layer3", 4, 12, new boundArea(0, 1, 1, 2), ["Lots of boxes"]),
 				new ITEM("pizza_stack_layer3", 5, 11, new boundArea(0, 1, 1, 2), ["Lots of boxes"], true),
 				new ITEM("pizza_stack_med", 6, 9, new boundArea(0, 1, 1, 1), ["Mmm... pizza...."]),
-				new ITEM("pizza_mtn", 4, 8, new boundArea(0, 0, 2, 3), ["How high can you get for this mountain of pizza?"]),
+				new ITEM("pizza_mtn", 4, 8, new boundArea(0, 0, 2, 3), ["How high can you get on this mountain of pizza?"]),
 				new ITEM("counter_top", 13, 5, new boundArea(0, 1, 2, 1), null, true),
 				new ITEM("counter_right", 15, 5, new boundArea(0, 0, 1, 4), null),
 				new ITEM("fridge", 10, 5, new boundArea(0, 0, 3, 2), ["So cold..."], true),

@@ -1,6 +1,5 @@
 //Global variables
 /*global levelList */
-/*global mapList */
 /*global story*/
 
 //set up the canvas
@@ -21,7 +20,7 @@ bgPNG.onload = function(){
 //level
 var map = [];
 var curQuad = "q2";
-var curSect = "NEWTON";
+var curSect = "newton";
 var curLvl;
 var boundVal = 1;
 var collideTiles = [1];
@@ -102,6 +101,7 @@ var nat = {
   interact : false,
   other : null,
   inventory : [],
+  pathQueue : [],
 
   //hoverboard
   board : false, 
@@ -192,16 +192,6 @@ dialogIMG.src = '../gui/dialog.png';
 var dialogReady = false;
 dialogIMG.onload = function(){dialogReady = true;};
 
-var dialogue = {
-  show : false,
-  text : "",
-  curtext : "",
-  index : 0,
-  speed : 0.4,
-  end : false
-};
-
-
 //controls
 function key(code){
   this.code = code;
@@ -227,8 +217,25 @@ var npcs = [];
 var buildings = [];
 var items = [];
 
+
+
+
+//////////////////    GENERIC FUNCTIONS   ///////////////
+
+
+
+//checks if an element is in an array
+function inArr(arr, e){
+  return arr.indexOf(e) !== -1
+}
+
+
+
 //////////////////    LEVEL FUNCTIONS   //////////////
 
+
+
+//resets the lists for the objects
 function reset(){
   npcs = [];
   buildings = [];
@@ -272,16 +279,7 @@ function loadLevel(aLevel, px, py, dir=null){
     return;
   }
 
-  //otherwise make a building level
-  //get the map data
-  var aMap;
-  for(var d=0;d<mapList.length;d++){
-    bMap = mapList[d];
-    if(aLevel.name === bMap.name){
-      aMap = bMap;
-      break;
-    }
-  }
+  var aMap = aLevel.map
 
   //reset rows and cols
   rows = aMap.rows;
@@ -291,13 +289,20 @@ function loadLevel(aLevel, px, py, dir=null){
 
   loadMap(aMap);
 
+  story.area = aMap.name;
   console.log("level loaded");
 
 }
 
 
+
+
 //////////////////   MAP FUNCTIONS  /////////////////
 
+
+
+
+//makes the moon level
 function blankMoon(quadrant){
   //reset background
   bgPNG.src = "../beta_sprites/" + quadrant + ".png";
@@ -340,6 +345,8 @@ function blankMoon(quadrant){
     edge = q4_space_edges;
   mapEdge(edge);
   curQuad = quadrant;
+
+  story.area = curQuad + "_" + curSect;
   level_loaded = true;
 
   //reset camera
@@ -444,6 +451,7 @@ function newQuadrant(new_quad, direction){
   loadLevel(lvl, nat.x, nat.y);
 }
 
+//retrieves level data by name
 function getLevel(name){
   //look for next leveldata
   var lvl;
@@ -455,6 +463,7 @@ function getLevel(name){
   }
 }
 
+//teleports to a new level based on teleportTriggers
 function beamMeUp(){
    //get the positions
   var rx;
@@ -482,8 +491,12 @@ function beamMeUp(){
   }
 }
 
+
+
 //////////////////  PLAYER CONTROLS /////////////////
 
+
+//directional movement
 function goNorth(sprite){
   if(!sprite.moving){
     sprite.initPos = Math.floor(sprite.y / size) * size;
@@ -512,6 +525,8 @@ function goWest(sprite){
     sprite.action = "travel";
   }
 }
+
+//movement on the map
 function travel(sprite){
   if(sprite.action == "travel"){   //continue if allowed to move
     var curspeed = (sprite.board ? sprite.hover_speed : sprite.speed);
@@ -561,9 +576,6 @@ function travel(sprite){
   }
 }
 
-
-
-
 //velocity control
 function velControl(cur, value, max){
   //increment or decrement
@@ -583,9 +595,13 @@ function velControl(cur, value, max){
 }
 
 
-////////   COLLISIONS   ///////////
 
 
+/////////////////   COLLISIONS   ////////////////////
+
+
+
+//if hit a collision point on the wall
 function hitWall(person){
   if(!level_loaded)
     return false;
@@ -607,18 +623,19 @@ function hitWall(person){
     return;
 
   //decide if adjacent to person
-  if(person.dir == "north" && collideTiles.indexOf(map[ry-1][rx]) != -1)
+  if(person.dir == "north" && inArr(collideTiles, map[ry-1][rx]))
     return true;
-  else if(person.dir == "south" && collideTiles.indexOf(map[ry+1][rx]) != -1)
+  else if(person.dir == "south" && inArr(collideTiles, map[ry+1][rx]))
     return true;
-  else if(person.dir == "east" && collideTiles.indexOf(map[ry][rx+1]) != -1)
+  else if(person.dir == "east" && inArr(collideTiles, map[ry][rx+1]))
     return true;
-  else if(person.dir == "west" && collideTiles.indexOf(map[ry][rx-1]) != -1)
+  else if(person.dir == "west" && inArr(collideTiles, map[ry][rx-1]))
     return true;
   else
     return false;
 }
 
+//if hit a boundary area if the building
 function hitBuilding(person){
   //get the positions
   var rx;
@@ -653,18 +670,19 @@ function hitBuilding(person){
     //console.log(xArea + "\t" + yArea);
 
 
-    if(person.dir == "north" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry-1) !== -1))
+    if(person.dir == "north" && inArr(xArea, rx) && inArr(yArea, ry-1))
       ouch = true;
-    else if(person.dir == "south" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry+1) !== -1))
+    else if(person.dir == "south" && inArr(xArea, rx) && inArr(yArea, ry+1))
       ouch = true;
-    else if(person.dir == "east" && (xArea.indexOf(rx+1) !== -1) && (yArea.indexOf(ry) !== -1))
+    else if(person.dir == "east" && inArr(xArea, rx+1) && inArr(yArea, ry))
       ouch = true;
-    else if(person.dir == "west" && (xArea.indexOf(rx-1) !== -1) && (yArea.indexOf(ry) !== -1))
+    else if(person.dir == "west" && inArr(xArea, rx-1) && inArr(yArea, ry))
       ouch = true;
   }
   return ouch;
 }
 
+//if hit another person
 function hitNPC(person){
   //get the positions
   var rx;
@@ -700,6 +718,7 @@ function hitNPC(person){
   return ouch;
 }
 
+//if hit an item's boundary
 function hitItem(person){
   //get the positions
   var rx;
@@ -733,19 +752,20 @@ function hitItem(person){
     //console.log(xArea + "\t" + yArea);
 
 
-    if(person.dir == "north" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry-1) !== -1))
+    if(person.dir == "north" && inArr(xArea, rx) && inArr(yArea, ry-1))
       ouch = true;
-    else if(person.dir == "south" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry+1) !== -1))
+    else if(person.dir == "south" && inArr(xArea, rx) && inArr(yArea, ry+1))
       ouch = true;
-    else if(person.dir == "east" && (xArea.indexOf(rx+1) !== -1) && (yArea.indexOf(ry) !== -1))
+    else if(person.dir == "east" && inArr(xArea, rx+1) && inArr(yArea, ry))
       ouch = true;
-    else if(person.dir == "west" && (xArea.indexOf(rx-1) !== -1) && (yArea.indexOf(ry) !== -1))
+    else if(person.dir == "west" && inArr(xArea, rx-1) && inArr(yArea, ry))
       ouch = true;
   }
   return ouch;
 
 }
 
+//if hit a specific boundary area
 function hitBoundary(sprite, boundary){
   //boundary in the form [x,y,w,h]
   if(boundary == null){
@@ -780,18 +800,19 @@ function hitBoundary(sprite, boundary){
 
   //console.log(xArea + "\t" + yArea);
 
-  if(sprite.dir == "north" && ((xArea.indexOf(rx) == -1) || (yArea.indexOf(ry-1) == -1)))
+  if(sprite.dir == "north" && (!inArr(xArea, rx) || !inArr(yArea, ry-1)))
     return true;
-  else if(sprite.dir == "south" && ((xArea.indexOf(rx) == -1) || (yArea.indexOf(ry+1) == -1)))
+  else if(sprite.dir == "south" && (!inArr(xArea, rx) || !inArr(yArea, ry+1)))
     return true;
-  else if(sprite.dir == "east" && ((xArea.indexOf(rx+1) == -1) || (yArea.indexOf(ry) == -1)))
+  else if(sprite.dir == "east" && (!inArr(xArea, rx+1) || !inArr(yArea, ry)))
     return true;
-  else if(sprite.dir == "west" && ((xArea.indexOf(rx-1) == -1) || (yArea.indexOf(ry) == -1)))
+  else if(sprite.dir == "west" && (!inArr(xArea, rx-1) || !inArr(yArea, ry)))
     return true;
   
   return false;
-  }
+}
 
+//if hit another generic object
 function hitOther(sprite, other){
   //get the positions
   var rx;
@@ -820,12 +841,16 @@ function hitOther(sprite, other){
   return false;
 }
 
+
+//grouped collision checker
 function collide(sprite, boundary=null){
   return hitNPC(sprite) || hitItem(sprite) || hitWall(sprite) || hitBuilding(sprite) || hitBoundary(sprite, boundary)
 }
 
 
-////////   INTERACT   ////////
+
+///////////////   INTERACT   ////////////////
+
 
 
 //the interact function
@@ -843,31 +868,37 @@ function canInteract(person, item){
   
     //decide if adjacent to person
     var t = item;
-    var t_ba = item.area;
-
-    //get bounding box area
     var xArea = [];
-    for(var z=0;z<t_ba.w;z++){
-      xArea.push(t_ba.x+t.x+z);
-    }
     var yArea = [];
-    for(var z=0;z<t_ba.h;z++){
-      yArea.push(t_ba.y+t.y+z);
+    if(t.area !== null){
+      var t_ba = item.area;
+
+      //get bounding box area
+      for(var z=0;z<t_ba.w;z++){
+        xArea.push(t_ba.x+t.x+z);
+      }
+      for(var z=0;z<t_ba.h;z++){
+        yArea.push(t_ba.y+t.y+z);
+      }
+    }else{
+      xArea.push(t.x);
+      yArea.push(t.y);
     }
+    
 
     //determine if able to interact
-    var interact = false;
-    if(person.dir == "north" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry-1) !== -1))
-      interact = true;
-    else if(person.dir == "south" && (xArea.indexOf(rx) !== -1) && (yArea.indexOf(ry+1) !== -1))
-      interact = true;
-    else if(person.dir == "east" && (xArea.indexOf(rx+1) !== -1) && (yArea.indexOf(ry) !== -1))
-      interact = true;
-    else if(person.dir == "west" && (xArea.indexOf(rx-1) !== -1) && (yArea.indexOf(ry) !== -1))
-      interact = true;
-
-    return interact;
+    if(person.dir == "north" && (inArr(xArea, rx) && inArr(yArea, ry-1)))
+      return true;
+    else if(person.dir == "south" && (inArr(xArea, rx) && inArr(yArea, ry+1)))
+      return true;
+    else if(person.dir == "east" && (inArr(xArea, rx+1) && inArr(yArea, ry)))
+      return true;
+    else if(person.dir == "west" && (inArr(xArea, rx-1) && inArr(yArea, ry)))
+      return true;
+  
+  return false;
 }
+
 //the talk function
 function canTalk(person, other_pers){
   if(other_pers.moving)
@@ -898,6 +929,7 @@ function canTalk(person, other_pers){
       return true;
 }
 
+//faces the main character
 function faceOpposite(npc){
   if(nat.dir === "north")
     npc.dir = "south";
@@ -909,13 +941,40 @@ function faceOpposite(npc){
     npc.dir = "west"
 }
 
+//non-cutscene specific behavior
+function defaultBehavior(npc){
+  if(!story.cutscene){
+    if(npc.interact){
+      clearInterval(npc.wt);
+      npc.wt = 0;
+    }
+    if(npc.move === "drunk_walk" && !npc.interact && npc.show){
+      if(npc.wt == 0 && !npc.moving){
+        npc.wt = setInterval(function(){
+          drunkardsWalk(npc, npc.boundary);
+          clearInterval(npc.wt);
+          npc.wt = 0;
+        }, (Math.random() * 2 + 1)*1000);
+      }
+    }
+  }else{
+    clearInterval(npc.wt);
+    npc.wt = 0;
+  }
+}
+
+
 
 ///////////////////   CAMERA  /////////////////////
+
+
+//if within the game bounds
 function withinBounds(x,y){
   var xBound = (x >= Math.floor(camera.x / 16) - 1) && (x <= Math.floor(camera.x / 16) + (canvas.width / 16));
   return xBound;
 }
 
+//have the camera follow the player
 function panCamera(){
   if(level_loaded){   //map filled?
     //camera displacement
@@ -927,6 +986,7 @@ function panCamera(){
   }
 }
 
+//reset the camera's position on the player
 function resetCamera(){
   camera.x = 0;
   camera.y = 0;
@@ -938,7 +998,11 @@ function resetCamera(){
     camera.y = (map.length * size) - canvas.height;
 }
 
+
+
 ///////////////////    NPCS    //////////////////
+
+
 
 //random walking
 function drunkardsWalk(sprite, boundary=null){
@@ -970,11 +1034,38 @@ function drunkardsWalk(sprite, boundary=null){
   }
 }
 
+//look in randomdirections
 function drunkardsLook(sprite){
   var dice;
   var directions = ["north", "south", "west", "east"];
   dice = Math.floor(Math.random() * 4);
   sprite.dir = directions[dice];
+}
+
+//act upon the robot pathQueue
+function smallStep(robot){
+  if(robot.pathQueue.length != 0 && !robot.moving){       //if not already moving and not an empty pathQueue
+    var nextStep = robot.pathQueue[0];
+    var curX = Math.floor(robot.x / 16);
+    var curY = Math.floor(robot.y / 16);
+
+    //changing y pos
+    if(curX == nextStep[0]){
+      if(nextStep[1] < curY)
+        goNorth(robot);
+      else if(nextStep[1] > curY)
+        goSouth(robot);
+    }   
+    //changing x pos    
+    else if(curY == nextStep[1]){
+      if(nextStep[0] < curX)
+        goWest(robot);
+      else if(nextStep[0] > curX)
+        goEast(robot);
+    }
+    //remove the node once reached
+    robot.pathQueue.shift();
+  }
 }
 
 
@@ -989,6 +1080,11 @@ function checkRender(){
     };
   }
   
+  if(!test_tilesReady){
+    testTiles.onload = function(){
+      test_tilesReady = true;
+    };
+  }
 
   //nat
   if(!nat.ready){
@@ -1041,11 +1137,13 @@ function drawMap(){
   }
 }
 
+//draw a character sprite
 function drawsprite(sprite){
   updatesprite(sprite);
   rendersprite(sprite);
 }
 
+//update animation
 function updatesprite(sprite){
   //update the frames
   if(sprite.ct == (sprite.fps - 1))
@@ -1053,6 +1151,7 @@ function updatesprite(sprite){
     
   sprite.ct = (sprite.ct + 1) % sprite.fps;
 }
+//draw the sprite
 function rendersprite(sprite){
   //set the animation sequence
   var sequence;
@@ -1098,12 +1197,14 @@ function rendersprite(sprite){
   }
 }
 
+//draw a building
 function renderPlace(build){
   if(build.ready){
     ctx.drawImage(build.img, build.x*size, build.y*size);
   }
 }
 
+//draw an item
 function drawItem(item){
   if(item.ready && item.show){
     if(item.animation !== null){
@@ -1126,26 +1227,33 @@ function drawItem(item){
   }
 }
 
+//update and draw an item
 function renderItem(item){
   if(item.animation !== null)
     updatesprite(item.animation);
   drawItem(item);
 }
 
+//show dialog gui
 function drawDialog(){
+  var dialogue = story.dialogue;
   if(dialogue.show){
     ctx.drawImage(dialogIMG, camera.x, camera.y);
     wrapText(dialogue.text[dialogue.index], camera.x + 20, camera.y + 260)
   }
 }
 
+//wrap the text if overflowing on the dialog
 function wrapText(text, x, y) {
+  ctx.font = "20px Fixedsys";
+  ctx.fillStyle = "#000000"
+
   var maxWidth = 280;
   var lineHeight = 30;
   var words = text.split(' ');
   var line = '';
 
-  for(var n = 0; n < words.length; n++) {
+  for(var n=0;n<words.length;n++) {
     var testLine = line + words[n] + ' ';
     var metrics = ctx.measureText(testLine);
     var testWidth = metrics.width;
@@ -1158,10 +1266,34 @@ function wrapText(text, x, y) {
       line = testLine;
     }
   }
-  ctx.font = "20px Fixedsys";
   ctx.fillText(line, x, y);
 }
-  
+
+//DEBUG TILES
+var testTiles = new Image();
+testTiles.src = "../tilesets/test.png";
+var test_tilesReady = false;
+testTiles.onload = function(){test_tilesReady = true}
+
+function drawTestMap(level){
+  var tmap = binMap(level, size);
+  if(test_tilesReady){
+    for(var y = 0; y < rows; y++){
+      for(var x = 0; x < cols; x++){
+        //if(withinBounds(x,y)){
+          //ctx.drawImage(tiles, size * map[y][x], 0, size, size, (x * size), (y * size), size, size);
+          ctx.drawImage(testTiles, 
+            size * Math.floor(tmap[y][x] % 2), size * Math.floor(tmap[y][x] / 2), 
+            size, size, 
+            (x * size), (y * size), 
+            size, size);
+        //}
+      }
+    }
+  }
+}
+ 
+ //render everything 
 function render(){
   checkRender();
   ctx.save();
@@ -1214,6 +1346,10 @@ function render(){
 
   drawDialog();
 
+
+  //if(story.area === "vals")
+  //  drawTestMap(levelList[4]);
+
   ctx.restore();
  // requestAnimationFrame(render);
 
@@ -1227,29 +1363,33 @@ function render(){
 var keyTick = 0;
 var kt = null; 
 
+//check for keydown
 document.body.addEventListener("keydown", function (e) {
-  if((moveKeySet.indexOf(e.keyCode) != -1)){
+  if(inArr(moveKeySet, e.keyCode)){
     keys[e.keyCode] = true;
-  }else if(actionKeySet.indexOf(e.keyCode) != -1){
+  }else if(inArr(actionKeySet, e.keyCode)){
     keys[e.keyCode] = true;
   }
 });
 
+//check for key released
 document.body.addEventListener("keyup", function (e) {
-  if(moveKeySet.indexOf(e.keyCode) != -1){
+  if(inArr(moveKeySet, e.keyCode)){
     keys[e.keyCode] = false;
-  }else if(actionKeySet.indexOf(e.keyCode) != -1){
+  }else if(inArr(actionKeySet, e.keyCode)){
     keys[e.keyCode] = false;
     reInteract = true;
   }
 });
 
+//check if any directional key is held down
 function anyKey(){
   return (keys[upKey] || keys[downKey] || keys[leftKey] || keys[rightKey])
 }
 
+//movement arrow keys
 function moveKeys(){
-  if(!nat.moving && !nat.interact){
+  if(!nat.moving && !nat.interact && !story.cutscene){
     if(keyTick < 1){
       if(keys[leftKey])         //left key
         nat.dir = "west";
@@ -1273,37 +1413,46 @@ function moveKeys(){
 
 }
 
-
+//action and interaction keys
 var reInteract = false;
 function actionKeys(){
-  if(keys[z_key] && !nat.interact && !nat.moving && reInteract){
+  var dialogue = story.dialogue;
+
+  if(keys[z_key] && !nat.interact && !nat.moving && reInteract && !story.cutscene){
     for(var i=0;i<items.length;i++){
       if(canInteract(nat, items[i]) && items[i].text){
+        story.trigger = "touch_" + items[i].name;
         reInteract = false;
-        nat.other = items[i];
-        nat.interact = true;
-        dialogue.text = items[i].text;
-        dialogue.index = 0;
+        if(!story.cutscene){
+          nat.other = items[i];
+          nat.interact = true;
+          dialogue.text = items[i].text;
+          dialogue.index = 0;
+        }
         return;
       }
     }
     for(var i=0;i<npcs.length;i++){
       if(canTalk(nat, npcs[i]) && npcs[i].text){
+        story.trigger = "talk_" + npcs[i].name;
         reInteract = false;
-        nat.other = npcs[i];
-        nat.other.interact = true;
-        faceOpposite(nat.other);
-        nat.interact = true;
-        dialogue.text = npcs[i].text;
-        dialogue.index = 0;
+        if(!story.cutscene){
+          nat.other = npcs[i];
+          nat.other.interact = true;
+          faceOpposite(nat.other);
+          nat.interact = true;
+          dialogue.text = npcs[i].text;
+          dialogue.index = 0;
+        }
         return;
       }
     }
-  }else if(keys[z_key] && nat.interact && reInteract){
+  }else if(keys[z_key] && dialogue.show && reInteract){
     reInteract = false;
-    if(dialogue.index +1 == nat.other.text.length){
+    if(dialogue.index +1 == dialogue.text.length){
       nat.interact = false;
       nat.other.interact = false;
+      story.taskIndex++;
     }else{
       dialogue.index++;
     }
@@ -1315,6 +1464,7 @@ function actionKeys(){
 ////////////////////  GAME FUNCTIONS  //////////////////
 
 
+//startup function
 function init(name, quad, sect, x, y){
   //look for next leveldata
   var lvl;
@@ -1328,15 +1478,21 @@ function init(name, quad, sect, x, y){
   loadLevel(lvl, x*size, y*size);
 }
 
-
+//main running function for the game
 function main(){
   requestAnimationFrame(main);
   canvas.focus();
   render();
 
+  //game
+  play();
+
+  //player movement
   travel(nat);
   panCamera();
   beamMeUp();
+  if(story.cutscene)
+    smallStep(nat);
   if(curLvl === "moon")
     quadChange(curQuad);
 
@@ -1344,27 +1500,17 @@ function main(){
   for(var n = 0;n<npcs.length;n++){
     var npc = npcs[n];
     travel(npc);
-    
-    if(npc.interact){
-      clearInterval(npc.wt);
-      npc.wt = 0;
-    }
-    if(npc.move === "drunk_walk" && !npc.interact && npc.show){
-      if(npc.wt == 0 && !npc.moving){
-        npc.wt = setInterval(function(){
-          drunkardsWalk(npc, npc.boundary);
-          clearInterval(npc.wt);
-          npc.wt = 0;
-        }, (Math.random() * 2 + 1)*1000);
-      }
-    }
-    
+    defaultBehavior(npc);
+    if(story.cutscene)
+      smallStep(npc);
   }
 
-  if(nat.interact){
-    dialogue.show = true;
-  }else
-    dialogue.show = false;
+  if(!story.cutscene){
+    if(nat.interact){
+      story.dialogue.show = true;
+    }else
+      story.dialogue.show = false;
+  }
 
   //keyboard ticks
   var akey = anyKey();
@@ -1390,6 +1536,7 @@ function main(){
   var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
+  settings += " --- " + story.taskIndex + " | " + story.mission + " | " + story.task;
   if(npcs.length > 0){
     //settings += " --- " + canTalk(nat, npcs[0]);
     //settings += " (" + npcs[0].x + ", " + npcs[0].y + ")";
@@ -1402,4 +1549,3 @@ function main(){
 }
 
 main();
-
