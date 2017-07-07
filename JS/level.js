@@ -88,6 +88,7 @@ function NPC(name, x, y){
   this.interact = false;
   this.boundArea;
   this.pathQueue = [];
+  this.lastPos = [];
 
   //movement
   this.speed = 1;

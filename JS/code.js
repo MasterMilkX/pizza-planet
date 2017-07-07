@@ -56,7 +56,7 @@ var cols = 40;
 var size = 16;
 var level_loaded = false;
 var tiles = new Image();
-tiles.src = "../tilesets/moon_tiles.png";
+tiles.src = "../tilesets/moon.png";
 var tilesReady = false;
 tiles.onload = function(){
   tilesReady = true;
@@ -102,6 +102,7 @@ var nat = {
   other : null,
   inventory : [],
   pathQueue : [],
+  lastPos : [],
 
   //hoverboard
   board : false, 
@@ -153,6 +154,8 @@ var ash = {
   move : "drunk",
   wt : 0,
   interact : false,
+  pathQueue : [],
+  lastPos : [],
 
   //movement
   speed : 1,
@@ -192,6 +195,13 @@ dialogIMG.src = '../gui/dialog.png';
 var dialogReady = false;
 dialogIMG.onload = function(){dialogReady = true;};
 
+//music
+var bg_music = new Audio("../music/Night Theme.mp3");
+bg_music.loop = true;
+bg_music.volume = .50;
+bg_music.load();
+//bg_music.autoplay = true;
+
 //controls
 function key(code){
   this.code = code;
@@ -217,7 +227,8 @@ var npcs = [];
 var buildings = [];
 var items = [];
 
-
+story.nat = nat;
+story.ash = ash;
 
 
 //////////////////    GENERIC FUNCTIONS   ///////////////
@@ -226,6 +237,8 @@ var items = [];
 
 //checks if an element is in an array
 function inArr(arr, e){
+  if(arr.length == 0)
+    return false;
   return arr.indexOf(e) !== -1
 }
 
@@ -248,6 +261,7 @@ function loadLevel(aLevel, px, py, dir=null){
   //reset everything
   reset();
   curLvl = aLevel.name;
+  story.level = aLevel;
 
   //reset nat's position
   nat.x = px;
@@ -290,6 +304,7 @@ function loadLevel(aLevel, px, py, dir=null){
   loadMap(aMap);
 
   story.area = aMap.name;
+  bg_music.play();
   console.log("level loaded");
 
 }
@@ -326,7 +341,7 @@ function blankMoon(quadrant){
   }
 
   //ready the tiles
-  tiles.src = "../tilesets/moon_tiles.png";
+  tiles.src = "../tilesets/moon.png";
   tilesReady = false;
   tiles.onload = function(){
     tilesReady = true;
@@ -500,6 +515,8 @@ function beamMeUp(){
 function goNorth(sprite){
   if(!sprite.moving){
     sprite.initPos = Math.floor(sprite.y / size) * size;
+    if(!story.cutscene)
+      sprite.lastPos = [Math.floor(sprite.x / size), Math.floor(sprite.y / size)];
     sprite.dir = "north";
     sprite.action = "travel";
   }
@@ -507,6 +524,8 @@ function goNorth(sprite){
 function goSouth(sprite){
   if(!sprite.moving){
     sprite.initPos = Math.floor(sprite.y / size) * size;
+    if(!story.cutscene)
+      sprite.lastPos = [Math.floor(sprite.x / size), Math.floor(sprite.y / size)];
     sprite.dir = "south";
     sprite.action = "travel";
   }
@@ -514,6 +533,8 @@ function goSouth(sprite){
 function goEast(sprite){
   if(!sprite.moving){
     sprite.initPos = Math.floor(sprite.x / size) * size;
+    if(!story.cutscene)
+      sprite.lastPos = [Math.floor(sprite.x / size), Math.floor(sprite.y / size)];
     sprite.dir = "east";
     sprite.action = "travel";
   }
@@ -521,6 +542,8 @@ function goEast(sprite){
 function goWest(sprite){
   if(!sprite.moving){
     sprite.initPos = Math.floor(sprite.x / size) * size;
+    if(!story.cutscene)
+      sprite.lastPos = [Math.floor(sprite.x / size), Math.floor(sprite.y / size)];
     sprite.dir = "west";
     sprite.action = "travel";
   }
@@ -1064,7 +1087,8 @@ function smallStep(robot){
         goEast(robot);
     }
     //remove the node once reached
-    robot.pathQueue.shift();
+    robot.lastPos = robot.pathQueue.shift();
+    //robot.lastPos = [Math.floor(robot.x / size), Math.floor(robot.y / size)];
   }
 }
 
@@ -1348,7 +1372,7 @@ function render(){
 
 
   //if(story.area === "vals")
-  //  drawTestMap(levelList[4]);
+    //drawTestMap(levelList[1]);
 
   ctx.restore();
  // requestAnimationFrame(render);
@@ -1478,6 +1502,10 @@ function init(name, quad, sect, x, y){
   loadLevel(lvl, x*size, y*size);
 }
 
+function maestro(){
+  !bg_music.paused ? bg_music.pause() : bg_music.play();
+}
+
 //main running function for the game
 function main(){
   requestAnimationFrame(main);
@@ -1524,6 +1552,8 @@ function main(){
   moveKeys();
   actionKeys();
 
+  ///////////////    DEBUG   //////////////////
+
   var pixX = Math.round(nat.x / size);
   var pixY = Math.round(nat.y / size);
 
@@ -1532,14 +1562,17 @@ function main(){
     var ny = Math.round(npcs[0].y / size);
   }
 
-  //debug
   var settings = "X: " + Math.round(nat.x) + " | Y: " + Math.round(nat.y);
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
-  settings += " --- " + story.taskIndex + " | " + story.mission + " | " + story.task;
+  settings += " --- " + story.taskIndex + " | " + story.cutscene;
   if(npcs.length > 0){
-    //settings += " --- " + canTalk(nat, npcs[0]);
+    settings += " --- " + npcs[0].lastPos;
     //settings += " (" + npcs[0].x + ", " + npcs[0].y + ")";
+  }
+  settings += " ---";
+  for(var a=0;a<story.nat.pathQueue.length;a++){
+    settings += " [" + story.nat.pathQueue[a].toString() + "], ";  
   }
   
   document.getElementById('botSettings').innerHTML = settings;

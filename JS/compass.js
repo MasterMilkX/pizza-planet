@@ -68,32 +68,43 @@ function gotoPos(robot, pos, level, size, extra=null, exclusions=null){
   return;
 }
 
-//decide to go north, south, east, or west
-function followPath(curPos, nextPos){
-  var curX = curPos[0];
-  var curY = curPos[1];
-  var nextX = nextPos[0];
-  var nextY = nextPos[1];
-
-  //if the same position
-  if(arrEq(curPos, nextPos))
-    return "done";
-
-  //otherwise use a compass
-  if(curX == nextX){
-    if(nextY < curY){
-      return "north";
-    }else if(nextY > curY){
-      return "south";
-    }
-  }else if(curY == nextY){
-    if(nextX > curX){
-      return "west";
-    }else if(nextX < curX){
-      return "east";
-    }
-  }
+//faces the main character
+function faceOpposite(npc, other){
+  if(other.dir === "north")
+    npc.dir = "south";
+  else if(other.dir === "south")
+    npc.dir = "north"
+  else if(other.dir === "west")
+    npc.dir = "east"
+  else if(other.dir === "east")
+    npc.dir = "west"
 }
+
+
+function followBot(leader, follower, level, size){
+  var leaderX;
+  var leaderY;
+  if(leader.dir === "north" || leader.dir === "west"){
+    leaderX = Math.ceil(leader.x / size);
+    leaderY = Math.ceil(leader.y / size);
+  }else if(leader.dir === "south" || leader.dir === "east"){
+    leaderX = Math.floor(leader.x / size);
+    leaderY = Math.floor(leader.y / size);
+  }
+
+  console.log(leaderX + ", " + leaderY);
+
+  if(leader.dir === "north")
+    gotoPos(follower, [leaderX, leaderY+1], level, size);
+  else if(leader.dir === "south")
+    gotoPos(follower, [leaderX, leaderY-1], level, size);
+  else if(leader.dir === "east")
+    gotoPos(follower, [leaderX+1, leaderY], level, size);
+  else if(leader.dir === "west")
+    gotoPos(follower, [leaderX-1, leaderY], level, size);
+
+}
+
 
 function binMap(level, size, extra=null, exclusions=null){
   var mapStuff = level.map;
@@ -199,6 +210,19 @@ function binMap(level, size, extra=null, exclusions=null){
       if(b_map[y][x] == 0){
         var pos = x + ", " + y;
         b_map[y][x] = (inArr(telCol, pos) ? 1 : 0);
+      }
+    }
+  }
+
+  var ashPos = Math.floor(story.ash.x/size) + ", " + Math.floor(story.ash.y/size);
+  var natPos = Math.floor(story.nat.x/size) + ", " + Math.floor(story.nat.y/size);
+
+  //get ash and nat
+  for(var y = 0; y < mapStuff.rows; y++){
+    for(var x = 0; x < mapStuff.cols; x++){
+      if(b_map[y][x] == 0){
+        var pos = x + ", " + y;
+        b_map[y][x] = (pos === ashPos || pos === natPos ? 1 : 0);
       }
     }
   }

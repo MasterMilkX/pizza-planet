@@ -33,8 +33,26 @@ function tileRange(low, high, exceptions){
 	return arr;
 }
 
+function emptyMap(rows, cols){
+	var map = [];
+  	for(var y = 0; y < rows; y++){
+    	var r = [];
+    	for(var x = 0; x < cols; x++){
+      		r.push(0);
+    	}
+    	map.push(r);
+    }
+    
+    return map;
+}
+
 var mapList = [
-	//new MAP("moon")
+	new MAP("moon",
+		3,
+		40, 40,
+		[1],
+		emptyMap(40,40),
+		),
 	new MAP("vals",
 		5,
 		20, 20, 

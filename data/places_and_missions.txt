@@ -1,5 +1,5 @@
 1. Pizza Place
-	- Order pizza (+2 LOVE pts, -$15)
+	- Cold pizza (+2 LOVE pts, -$15)
 	* Take delivery jobs (+$25/run)
 	- Advice from Mr. Val (Info on Pizza Planet or LOVE pts)
 2. Laundromat
