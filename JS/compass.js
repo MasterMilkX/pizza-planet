@@ -5,16 +5,6 @@
 
 
 function gotoPos(robot, pos, level, size, extra=null, exclusions=null){
-  var map = binMap(level, size, extra, exclusions);
-
-  //if no target move on
-  
-
-  //function variables
-  var frontier = [];
-  var closedCells = [];
-  var index = 0;
-  var parents = [];
 
   //position variables
   var robotX = Math.round(robot.x / size);
@@ -24,8 +14,17 @@ function gotoPos(robot, pos, level, size, extra=null, exclusions=null){
   var robotPos = [robotX, robotY];
   var targetPos = [targetX, targetY];
 
+  //if already at position
   if(arrEq(robotPos, targetPos))
     return;
+
+  var map = binMap(level, size, extra, exclusions);
+
+  //function variables
+  var frontier = [];
+  var closedCells = [];
+  var index = 0;
+  var parents = [];
 
   //add initial position to the sets
   frontier.push(robotPos);
@@ -61,8 +60,6 @@ function gotoPos(robot, pos, level, size, extra=null, exclusions=null){
       q.push(path[(path.length-1)-p]);
     }
     robot.pathQueue = q;
-  }else{
-    story.taskIndex++;
   }
 
   return;
@@ -81,29 +78,34 @@ function faceOpposite(npc, other){
 }
 
 
-function followBot(leader, follower, level, size){
-  var leaderX;
-  var leaderY;
-  if(leader.dir === "north" || leader.dir === "west"){
-    leaderX = Math.ceil(leader.x / size);
-    leaderY = Math.ceil(leader.y / size);
-  }else if(leader.dir === "south" || leader.dir === "east"){
-    leaderX = Math.floor(leader.x / size);
-    leaderY = Math.floor(leader.y / size);
+function gotoBot(leader, follower, level, size){
+  var leaderX = Math.round(leader.x / size);
+  var leaderY = Math.round(leader.y / size);
+  var followX = Math.round(follower.x / size);
+  var followY = Math.round(follower.y / size);
+
+  var diffX = Math.abs(leaderX - followX);
+  var diffY = Math.abs(leaderY - followY);
+
+  //console.log("LEADER: " + leaderX + " " + leaderY);
+  //console.log("FOLLOW: " + followX + " " + followY);
+
+  //north and south
+  if(diffX < diffY){
+    if(leaderY > followY)
+      gotoPos(follower, [followX, followY+1], level, size);
+    else if(leaderY < followY)
+      gotoPos(follower, [followX, followY-1], level, size);
+  }else{
+    if(leaderX > followX)
+      gotoPos(follower, [followX+1, followY], level, size);
+    else if(leaderX < followX)
+      gotoPos(follower, [followX-1, followY], level, size);
+  
   }
 
-  console.log(leaderX + ", " + leaderY);
-
-  if(leader.dir === "north")
-    gotoPos(follower, [leaderX, leaderY+1], level, size);
-  else if(leader.dir === "south")
-    gotoPos(follower, [leaderX, leaderY-1], level, size);
-  else if(leader.dir === "east")
-    gotoPos(follower, [leaderX+1, leaderY], level, size);
-  else if(leader.dir === "west")
-    gotoPos(follower, [leaderX-1, leaderY], level, size);
-
 }
+
 
 
 function binMap(level, size, extra=null, exclusions=null){

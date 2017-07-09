@@ -89,6 +89,7 @@ function NPC(name, x, y){
   this.boundArea;
   this.pathQueue = [];
   this.lastPos = [];
+  this.following = false;
 
   //movement
   this.speed = 1;

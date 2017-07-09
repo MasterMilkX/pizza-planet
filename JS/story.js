@@ -40,8 +40,39 @@ function getCharbyName(name){
 		var char = story.level.chars[c];
 		if(char.name === name)
 			return char;
-	}
+	}z
 	return null;
+}
+
+
+//NOTE: slightly glitchy but gives best result :/
+function follow(p1, p2){
+
+	var nx;
+    var ny;
+    if(p1.dir === "north" || p1.dir === "west"){
+      nx = Math.ceil(p1.x / size);
+      ny = Math.ceil(p1.y / size);
+    }else if(p1.dir === "south" || p1.dir === "east"){
+      nx = Math.floor(p1.x / size);
+      ny = Math.floor(p1.y / size);
+    }
+
+
+	if(p2.moving){
+		if(p1.pathQueue.length > 0 && !arrEq(p1.pathQueue[0], [nx, ny])){
+			console.log("not done");
+			return;
+		}
+		else if((p1.pathQueue.length == 0) || (p1.pathQueue.length > 0 && arrEq(p1.pathQueue[0], [nx, ny]))){
+			//console.log("next step")
+			gotoBot(p2, p1, story.level, story.size);
+			return;
+		}
+	}
+
+	return;
+
 }
 
 //the entire script for the game
@@ -80,24 +111,19 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					story.nat.board = false;
 					//goto 
 					var damon = getCharbyName("damon");
-					story.nat.pathQueue.push(damon.lastPos);
 					gotoPos(damon, [13, 21], story.level, story.size);
-					console.log(story.nat.pathQueue)
+					story.nat.following = false;
 					story.taskIndex = 2;
 				}else if(taskIndex == 2){
 					var damon = getCharbyName("damon");
 					var dx = Math.floor(damon.x/story.size);
 					var dy = Math.floor(damon.y/story.size);
 
+					follow(story.nat, damon)
 
-					//console.log("run man!");
-					//console.log(story.nat.pathQueue.length)
-					//followBot(damon, story.nat, story.level, story.size);
-					if(!inArr(story.nat.pathQueue, damon.lastPos)){
-						console.log("go for it");
-						story.nat.pathQueue.push(damon.lastPos);
-					}
-					console.log(story.nat.pathQueue[0])
+					//if(story.nat.pathQueue.length == 0)
+					//	gotoBot(damon, story.nat, story.level, story.size)
+
 
 					if((dx == 13) && (dy == 21) && (!damon.moving))
 						story.taskIndex = 3;
@@ -106,6 +132,7 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					
 					
 				}else if(taskIndex == 3){
+					story.nat.following = false;
 					faceOpposite(getCharbyName("damon"), story.nat)
 					dialogue.text = ["Damon: That was a fun walk"];
 					dialogue.show = true;

@@ -103,6 +103,7 @@ var nat = {
   inventory : [],
   pathQueue : [],
   lastPos : [],
+  following : false,
 
   //hoverboard
   board : false, 
@@ -707,6 +708,7 @@ function hitBuilding(person){
 
 //if hit another person
 function hitNPC(person){
+
   //get the positions
   var rx;
   var ry;
@@ -867,6 +869,10 @@ function hitOther(sprite, other){
 
 //grouped collision checker
 function collide(sprite, boundary=null){
+  //disable if cutscenes on
+  if(story.cutscene)
+    return false;
+  //otherwise continue
   return hitNPC(sprite) || hitItem(sprite) || hitWall(sprite) || hitBuilding(sprite) || hitBoundary(sprite, boundary)
 }
 
@@ -1145,7 +1151,7 @@ function checkRender(){
 
 //rendering function for the map
 function drawMap(){
-  if(tilesReady){
+  if(tilesReady && level_loaded){
     for(var y = 0; y < rows; y++){
       for(var x = 0; x < cols; x++){
         //if(withinBounds(x,y)){
@@ -1570,10 +1576,14 @@ function main(){
     settings += " --- " + npcs[0].lastPos;
     //settings += " (" + npcs[0].x + ", " + npcs[0].y + ")";
   }
+  
+  settings += " --- " + story.nat.pathQueue.length;
+  /*
   settings += " ---";
   for(var a=0;a<story.nat.pathQueue.length;a++){
     settings += " [" + story.nat.pathQueue[a].toString() + "], ";  
   }
+  */
   
   document.getElementById('botSettings').innerHTML = settings;
 
