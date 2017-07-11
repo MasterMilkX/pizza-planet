@@ -1,4 +1,5 @@
 /*global mapList*/
+/*global story*/
 
 //////////////////// ITEM ///////////////////
 
@@ -134,11 +135,12 @@ function getIMGBuild(name){
 //separate building into top half and lower half 
 // which are rendered at different layers
 
-function PLACE(name, x, y, boundary=null){
+function PLACE(name, x, y, boundary=null, thru=false){
 	this.name = name;
 	this.x = x;
 	this.y = y;
 	this.area = boundary;
+	this.thru = thru;
 
 	var set = new getIMGBuild(name);
 	this.img = set.img;
@@ -187,10 +189,11 @@ function nothing(){return;}
 var levelList = [
 	//moon places
 	new levelDat("moon", "q1", "newton",
-			[new PLACE("capsule_crash", 10, 15, new boundArea(2, 7, 5, 1))],
+			[new PLACE("capsule_crash_top", 10, 15, null),
+			 new PLACE("capsule_crash_bottom", 10, 21, new boundArea(1, 0, 7, 1), true)],
 			[],
 			[],
-			[],
+			[new TELEPORT(14, 22, "shuttle", 10, 14)],
 			nothing()
 			),
 	new levelDat("moon", "q2", "newton", 
@@ -237,5 +240,13 @@ var levelList = [
 			[new TELEPORT(13, 14, "moon", 28, 24, "south")],
 			function(){this.chars[0].boundary = new boundArea(10, 7, 5, 4);}
 
+		),
+	new levelDat("shuttle", "q1", "newton",
+		[],
+		[new NPC("ash_" + story.gender[story.ashGen], 7, 9)],
+		[new ITEM("bed", 8, 6, new boundArea(0, 0, 4, 4), ["This bed is juuuust right"], true)],
+		[new TELEPORT(10, 15, "moon", 14, 23),
+		 new TELEPORT(9, 15, "moon", 14, 23)],
+		nothing()
 		)
 ];

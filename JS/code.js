@@ -196,6 +196,16 @@ dialogIMG.src = '../gui/dialog.png';
 var dialogReady = false;
 dialogIMG.onload = function(){dialogReady = true;};
 
+var optionIMG = new Image();
+optionIMG.src = "../gui/choice_box.png";
+var optionReady = false;
+optionIMG.onload = function(){optionReady = true;};
+
+var selectIMG = new Image();
+selectIMG.src = "../gui/select_box.png";
+var selectReady = false;
+selectIMG.onload = function(){selectReady = true;};
+
 //music
 var bg_music = new Audio("../music/Night Theme.mp3");
 bg_music.loop = true;
@@ -509,7 +519,9 @@ function beamMeUp(){
 
 
 
+
 //////////////////  PLAYER CONTROLS /////////////////
+
 
 
 //directional movement
@@ -1121,6 +1133,11 @@ function checkRender(){
     nat.img.onload = function(){nat.ready = true;}
   }
 
+  //nat
+  if(!ash.ready){
+    ash.img.onload = function(){ash.ready = true;}
+  }
+
   //npcs
   for(var a=0;a<npcs.length;a++){
     if(!npcs[a].ready){
@@ -1267,9 +1284,22 @@ function renderItem(item){
 //show dialog gui
 function drawDialog(){
   var dialogue = story.dialogue;
+  var choice = story.choice_box;
   if(dialogue.show){
     ctx.drawImage(dialogIMG, camera.x, camera.y);
     wrapText(dialogue.text[dialogue.index], camera.x + 20, camera.y + 260)
+  
+    if(choice.show){
+      for(var c=0;c<choice.options.length;c++){
+        var cx = camera.x+232;
+        var cy = camera.y+216+(-23*(c+1));
+        ctx.drawImage(optionIMG, cx, cy);
+        ctx.font = "12px Fixedsys";
+        ctx.fillText(choice.options[choice.options.length-(c+1)], cx+8, cy+14);
+      }
+
+     ctx.drawImage(selectIMG, camera.x+232, camera.y+216+(23*(choice.index-choice.options.length)));
+    }
   }
 }
 
@@ -1348,14 +1378,28 @@ function render(){
       renderItem(items[i]);
   }
 
+  //draw the buildings if in front of nat
+  for(var b=0;b<buildings.length;b++){
+    if(buildings[b].thru)
+      renderPlace(buildings[b])
+  }
+
   //if npc behind nat
   for(var c=0;c<npcs.length;c++){
     if(nat.y >= npcs[c].y)
       drawsprite(npcs[c]);
   }
 
+  //draw ash in front
+  if(ash.show && (nat.y >= ash.y))
+    drawsprite(ash);
+
   //draw nat
   drawsprite(nat);
+
+  //draw ash in front
+  if(ash.show && (nat.y >= ash.y))
+    drawsprite(ash);
 
   //if npc in front of nat
   for(var c=0;c<npcs.length;c++){
@@ -1370,7 +1414,8 @@ function render(){
 
   //draw the buildings if in front of nat
   for(var b=0;b<buildings.length;b++){
-    renderPlace(buildings[b])
+    if(!buildings[b].thru)
+      renderPlace(buildings[b])
   }
   
 
@@ -1395,6 +1440,16 @@ var kt = null;
 
 //check for keydown
 document.body.addEventListener("keydown", function (e) {
+  if(story.cutscene && story.choice_box.show){
+    var c = story.choice_box;
+    if(e.keyCode == downKey || e.keyCode == rightKey)
+      story.choice_box.index = (c.index + 1) % c.options.length;
+    else if(e.keyCode == upKey || e.keyCode == leftKey)
+      story.choice_box.index = ((c.index + c.options.length) - 1) % c.options.length;
+  }
+});
+
+document.body.addEventListener("keydown", function (e) {
   if(inArr(moveKeySet, e.keyCode)){
     keys[e.keyCode] = true;
   }else if(inArr(actionKeySet, e.keyCode)){
@@ -1412,6 +1467,7 @@ document.body.addEventListener("keyup", function (e) {
   }
 });
 
+
 //check if any directional key is held down
 function anyKey(){
   return (keys[upKey] || keys[downKey] || keys[leftKey] || keys[rightKey])
@@ -1425,29 +1481,30 @@ function moveKeys(){
         nat.dir = "west";
       else if(keys[rightKey])    //right key
         nat.dir = "east";
-      else if(keys[upKey])    //upkey
+      else if(keys[upKey])    //up key
         nat.dir = "north";
-      else if(keys[downKey])    //downkey
+      else if(keys[downKey])    //down key
         nat.dir = "south";
     }else{
       if(keys[leftKey])         //left key
         goWest(nat);
       else if(keys[rightKey])    //right key
         goEast(nat);
-      else if(keys[upKey])    //upkey
+      else if(keys[upKey])    //up key
         goNorth(nat);
-      else if(keys[downKey])    //downkey
+      else if(keys[downKey])    //down key
         goSouth(nat);
     }
   }
-
 }
+
 
 //action and interaction keys
 var reInteract = false;
 function actionKeys(){
-  var dialogue = story.dialogue;
 
+  //interact [Z]
+  var dialogue = story.dialogue;
   if(keys[z_key] && !nat.interact && !nat.moving && reInteract && !story.cutscene){
     for(var i=0;i<items.length;i++){
       if(canInteract(nat, items[i]) && items[i].text){
@@ -1480,12 +1537,25 @@ function actionKeys(){
   }else if(keys[z_key] && dialogue.show && reInteract){
     reInteract = false;
     if(dialogue.index +1 == dialogue.text.length){
+      //select item if options showing
+      if(story.choice_box.show){
+        story.trigger = "> " + story.choice_box.options[story.choice_box.index];
+      }
+      
       nat.interact = false;
       nat.other.interact = false;
-      story.taskIndex++;
+      if(story.cutscene)
+        story.taskIndex++;
     }else{
       dialogue.index++;
+       console.log('next')
     }
+  }
+
+  //hoverboard
+  if(keys[x_key] && !story.cutscene && reInteract){
+    reInteract = false;
+    nat.board = !nat.board;
   }
 }
 

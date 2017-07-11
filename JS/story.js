@@ -10,7 +10,7 @@ var story = {
 	pronouns : [["he", "him", "his"], ["they", "them", "their"], ["she", "her", "her"]],
 	dating : ["boyfriend", "sig. other", "girlfriend"],
 	natGen : 1,
-	ashGen : 0,
+	ashGen : 2,
 	lovePts : 0,
 
 	//level data
@@ -19,8 +19,8 @@ var story = {
 
 	//mission
 	cutscene : false,
-	mission : "Moon Walk",
-	task : "Go for a walk",
+	mission : "Lucky",
+	task : "Punch Me",
 	area : "",
 	storyIndex : 0,
 	taskIndex : 0,
@@ -29,6 +29,11 @@ var story = {
 	//dialogue
 	dialogue : {
 		text : "",
+		index : 0,
+		show : false
+	},
+	choice_box : {
+		options : [],
 		index : 0,
 		show : false
 	}
@@ -61,7 +66,7 @@ function follow(p1, p2){
 
 	if(p2.moving){
 		if(p1.pathQueue.length > 0 && !arrEq(p1.pathQueue[0], [nx, ny])){
-			console.log("not done");
+			//console.log("not done");
 			return;
 		}
 		else if((p1.pathQueue.length == 0) || (p1.pathQueue.length > 0 && arrEq(p1.pathQueue[0], [nx, ny]))){
@@ -75,6 +80,13 @@ function follow(p1, p2){
 
 }
 
+function reset(){
+	story.taskIndex = 0;
+	story.dialogue.show = false;
+	story.choice_box.show = false;
+	story.cutscene = false;
+}
+
 //the entire script for the game
 function play(){
 	//make local variables
@@ -86,8 +98,14 @@ function play(){
 	var taskIndex = story.taskIndex;
 	var cutscene = story.cutscene;
 	var dialogue = story.dialogue;
+	var choice = story.choice_box;
 
-	var waitForClose = 0;
+
+	//permavariables
+	if(area === "shuttle"){
+		getCharbyName("ash_" + story.gender[story.ashGen]).text = ["Hey bae~"]
+	}
+
 
 if(mission === "Orientation"  && storyIndex == 0){
 	if(task === "Go to Vals"){
@@ -97,7 +115,68 @@ if(mission === "Orientation"  && storyIndex == 0){
 	}
 }
 
-//test cutscene
+//test option
+else if(mission === "Lucky" && storyIndex == 0){
+	if(task === "Punch Me"){
+		if(area === "q2_newton"){
+			if(trigger === "talk_damon"){
+				story.cutscene = true;
+				if(taskIndex == 0){
+					dialogue.text = ["Damon: Feeling lucky?"];
+					choice.show = true;
+					choice.options = ["Sure?", "Not really"];
+					dialogue.show = true;
+				}else{
+					reset();
+				}
+			}
+			else if(trigger === "> Sure?" && taskIndex == 1){
+				dialogue.text = ["Damon: Then punch me! I dare you!"];
+				choice.show = true;
+				choice.options = ["Punch", "Don't Punch"];
+				dialogue.show = true;			
+			}else if(trigger === "> Not really"){
+				if(taskIndex == 1){
+					choice.show = false;
+					dialogue.text = ["Damon: Ha! Didn't think so!"];
+					dialogue.show = true;
+				}else{
+					story.taskIndex = 0;
+					story.cutscene = false;
+				}
+			}else if(trigger === "> Punch"){
+				if(taskIndex == 2){
+					choice.show = false;
+					dialogue.text = ["POW!", 
+									"Damon: Whoa! That's quite a punch!",
+									"I underestimated you, " + story.natName + "!", 
+									"Here's a prize",
+									story.natName + " got a badge...?",
+									"Damon: That'll show everyone you're not", "somebody to mess with!"];
+					dialogue.show = true;
+				}else{
+					getCharbyName("damon").text = ["Damon: That'll show everyone you're not", "somebody to mess with!"]
+					story.nat.inventory.push("punch badge");
+					story.mission = "Moon Walk";
+					story.task = "Go for a walk";
+					story.cutscene = false;
+					story.taskIndex = 0;
+				}
+			}else if(trigger === "> Don't Punch"){
+				if(taskIndex == 2){
+					choice.show = false;
+					dialogue.text = ["Damon: Chicken..."];
+					dialogue.show = true;
+				}else{
+					story.taskIndex = 0;
+					story.cutscene = false;
+				}
+			}
+		}
+	}
+}
+
+//test follow cutscene
 else if(mission === "Moon Walk"  && storyIndex == 0){
 	if(task === "Go for a walk"){
 		if(area === "q2_newton"){
@@ -112,7 +191,6 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					//goto 
 					var damon = getCharbyName("damon");
 					gotoPos(damon, [13, 21], story.level, story.size);
-					story.nat.following = false;
 					story.taskIndex = 2;
 				}else if(taskIndex == 2){
 					var damon = getCharbyName("damon");
@@ -142,13 +220,6 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					dialogue.show = false;
 					story.cutscene = false;
 				}
-				//wait to finish
-
-				//console.log("STORY: " + storyIndex);
-
-				//the end			
-				//storyIndex+=1;
-				//story.trigger = "none";
 			}
 		}
 	}
