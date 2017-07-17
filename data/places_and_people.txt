@@ -16,7 +16,7 @@ Places and People
 	- Barkeep : Alien
 	- Cynic Drunk : Robot
 5. Waffle House
-	- Crazy Man : Robot
+	- Hipster Man : Robot
 	- Waitress : Human
 	- Cook : Human
 6. Car Shop
@@ -41,10 +41,18 @@ Places and People
 12. Nat and Ash's Ship 
 	- Nat : Robot
 	- Ash : Human
+13. Moon	
+	- Damon : Human?
+	- Tunnel Keeper : Robot
+	- Traveler : Alien (opposite gender of Nat)
 
-Humans : 8 (+ Ash)
-Aliens : 9
-Robots : 8 (+ Nat)
+Humans : 9 (+ Ash)
+Aliens : 10
+Robots : 9 (+ Nat)
 
-25 residents
-27 total
+27 residents
+30 total
+
+
+Nat Name Choice: Nat / Sam / Logan
+Ash Name Choice: Ash / Max / Robin

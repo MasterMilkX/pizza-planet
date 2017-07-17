@@ -100,7 +100,6 @@ var nat = {
   //other properties
   interact : false,
   other : null,
-  inventory : [],
   pathQueue : [],
   lastPos : [],
   following : false,
@@ -206,6 +205,11 @@ selectIMG.src = "../gui/select_box.png";
 var selectReady = false;
 selectIMG.onload = function(){selectReady = true;};
 
+var inventoryIMG = new Image();
+inventoryIMG.src = "../gui/inventory.png";
+var inventoryReady = false;
+inventoryIMG.onload = function(){inventoryReady = true;};
+
 //music
 var bg_music = new Audio("../music/Night Theme.mp3");
 bg_music.loop = true;
@@ -228,9 +232,10 @@ var moveKeySet = [upKey, leftKey, rightKey, downKey];
 
 var z_key = 90;   //[Z]
 var x_key = 88;   //[X]
+var c_key = 67;   //[X]
 var a_key = 65;   //[A]
 var s_key = 83;   //[S]
-var actionKeySet = [z_key, x_key, a_key, s_key];
+var actionKeySet = [z_key, x_key, a_key, s_key, c_key];
 var keys = [];
 
 //add-ins
@@ -1303,6 +1308,12 @@ function drawDialog(){
   }
 }
 
+function drawInventory(){
+  var inv = story.inventory;
+
+  if(inv.show)
+}
+
 //wrap the text if overflowing on the dialog
 function wrapText(text, x, y) {
   ctx.font = "20px Fixedsys";
@@ -1557,6 +1568,14 @@ function actionKeys(){
     reInteract = false;
     nat.board = !nat.board;
   }
+
+  //inventory
+  if(keys[c_key] && !story.cutscene && reInteract){
+    reInteract = false;
+    story.inventory.show = true;
+
+  }
+
 }
 
 

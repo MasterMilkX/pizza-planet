@@ -32,10 +32,19 @@ var story = {
 		index : 0,
 		show : false
 	},
+
+	//choice 
 	choice_box : {
 		options : [],
 		index : 0,
 		show : false
+	},
+
+	//inventory
+	inventory : {
+		bag : [],
+		index : 0, 
+		show : 0
 	}
 
 };
@@ -156,7 +165,7 @@ else if(mission === "Lucky" && storyIndex == 0){
 					dialogue.show = true;
 				}else{
 					getCharbyName("damon").text = ["Damon: That'll show everyone you're not", "somebody to mess with!"]
-					story.nat.inventory.push("punch badge");
+					story.inventory.push("punch badge");
 					story.mission = "Moon Walk";
 					story.task = "Go for a walk";
 					story.cutscene = false;
