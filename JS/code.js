@@ -1307,11 +1307,49 @@ function drawDialog(){
     }
   }
 }
+var indexOffset;
 
 function drawInventory(){
   var inv = story.inventory;
 
-  if(inv.show)
+  if(inv.show){
+    //w:112 h:240
+    ctx.drawImage(inventoryIMG, camera.x+200, camera.y+24);
+    
+    //set the cutoff
+    var max = (inv.bag.length > 9 ? 9 : inv.bag.length);
+    if(inv.index >= (inv.window+10))
+      inv.window = inv.index-9;
+    else if(inv.index < (inv.window))
+      inv.window--;
+
+    //var indexOffset;
+    if (inv.index == (inv.window+9))
+      indexOffset = 9
+    else if(inv.index == (inv.window))
+      indexOffset = 0;
+    else
+      indexOffset = inv.index - inv.window;
+
+    for(var i=0;i<=max;i++){
+      var ix = camera.x+200;
+      var iy = camera.y+24+(23*(i));
+      ctx.font = "12px Fixedsys";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(inv.bag[i+inv.window], ix+8, iy+14);
+    }
+    
+    ctx.drawImage(selectIMG, 
+      0, 0,
+      80, 24,
+      camera.x+200, camera.y+24+(23*(indexOffset)),
+      112, 24);
+  }
+}
+
+function drawGUI(){
+  drawInventory();
+  drawDialog();
 }
 
 //wrap the text if overflowing on the dialog
@@ -1430,7 +1468,7 @@ function render(){
   }
   
 
-  drawDialog();
+  drawGUI();
 
 
   //if(story.area === "vals")
@@ -1457,6 +1495,14 @@ document.body.addEventListener("keydown", function (e) {
       story.choice_box.index = (c.index + 1) % c.options.length;
     else if(e.keyCode == upKey || e.keyCode == leftKey)
       story.choice_box.index = ((c.index + c.options.length) - 1) % c.options.length;
+  }
+
+  if(story.inventory.show){
+    var i = story.inventory;
+    if(e.keyCode == downKey || e.keyCode == rightKey)
+      story.inventory.index = (i.index + 1) % i.bag.length;
+    else if(e.keyCode == upKey || e.keyCode == leftKey)
+      story.inventory.index = ((i.index + i.bag.length) - 1) % i.bag.length;
   }
 });
 
@@ -1486,7 +1532,7 @@ function anyKey(){
 
 //movement arrow keys
 function moveKeys(){
-  if(!nat.moving && !nat.interact && !story.cutscene){
+  if(!nat.moving && !nat.interact && !story.cutscene && !story.inventory.show){
     if(keyTick < 1){
       if(keys[leftKey])         //left key
         nat.dir = "west";
@@ -1516,7 +1562,7 @@ function actionKeys(){
 
   //interact [Z]
   var dialogue = story.dialogue;
-  if(keys[z_key] && !nat.interact && !nat.moving && reInteract && !story.cutscene){
+  if(keys[z_key] && !nat.interact && !nat.moving && reInteract && !story.cutscene && !story.inventory.show){
     for(var i=0;i<items.length;i++){
       if(canInteract(nat, items[i]) && items[i].text){
         story.trigger = "touch_" + items[i].name;
@@ -1564,7 +1610,7 @@ function actionKeys(){
   }
 
   //hoverboard
-  if(keys[x_key] && !story.cutscene && reInteract){
+  if(keys[x_key] && !story.cutscene && reInteract && !story.inventory.show){
     reInteract = false;
     nat.board = !nat.board;
   }
@@ -1572,7 +1618,7 @@ function actionKeys(){
   //inventory
   if(keys[c_key] && !story.cutscene && reInteract){
     reInteract = false;
-    story.inventory.show = true;
+    story.inventory.show = !story.inventory.show;
 
   }
 
@@ -1661,13 +1707,16 @@ function main(){
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
   settings += " --- " + story.taskIndex + " | " + story.cutscene;
+ 
+  settings += " --- window: " + story.inventory.window 
+  settings += " | offset: " + indexOffset + " | index: " + story.inventory.index;
+
+  /*
   if(npcs.length > 0){
     settings += " --- " + npcs[0].lastPos;
     //settings += " (" + npcs[0].x + ", " + npcs[0].y + ")";
   }
-  
-  settings += " --- " + story.nat.pathQueue.length;
-  /*
+
   settings += " ---";
   for(var a=0;a<story.nat.pathQueue.length;a++){
     settings += " [" + story.nat.pathQueue[a].toString() + "], ";  

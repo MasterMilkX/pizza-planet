@@ -42,9 +42,13 @@ var story = {
 
 	//inventory
 	inventory : {
-		bag : [],
+		bag : ['hover board', 'guitar pick', 'banana', 
+		'your mom', 'doggo', 'pikachu', 
+		'communism', 'dick fingers', 'fart in a jar',
+		'space book', 'piggy', 'hacker manifesto'],
 		index : 0, 
-		show : 0
+		show : 0,
+		window : 0
 	}
 
 };

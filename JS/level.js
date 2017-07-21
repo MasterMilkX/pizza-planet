@@ -203,7 +203,7 @@ var levelList = [
 			 new ITEM("beam", 27, 22, null, null, false, true, new animateITEM(32, 32, [0,1], 25, 2))],
 			[new TELEPORT(27, 23, "vals", 10, 13, "south"),
 			 new TELEPORT(28, 23, "vals", 10, 13, "south")],
-			nothing()
+			function(){this.chars[0].boundary = new boundArea(0, 0, 40, 40);}
 			),
 	new levelDat("moon", "q3", "newton",
 			[],
