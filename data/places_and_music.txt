@@ -1,0 +1,56 @@
+Places and Music
+=================
+
+1. Pizza Place
+	- Ska
+	- ["Pizza Day", Reel Big Fish, Sugar Ray]
+2. Laundromat
+	- Beach and funk
+	- [Sugar Ray, Red Hot Chili Peppers]
+3. Theater
+	- Punk
+	- [Green Day, The Clash]
+4. Bar
+	- Blues and ballads
+	["Soul to Squeeze", "American Pie"]
+5. Waffle House
+	- 90's indie rock
+	- [Cub, Plumtree, Voxtrot]
+6. Car Shop
+	- 50's rock and roll
+	- [Grease, "Johnny B Goode"]
+7. Farmer's Market
+	- Folk
+	- ["Liar"]
+8. Arcade
+	- 80's pop and Electronic synth
+	- [Zolof]
+9. Pawn Shop
+	- Lo-fi distortion
+	- [Yuck, Mike Krol]
+10. Handyman
+	- Industrial jazz
+	- [LBP Factory of a Better Tomorrow, Metropolis]
+11. Library
+	- Baroque and Orchestra
+	- [Mozart, Vitamin String Quartet]
+12. Nat and Ash's Ship 
+	- see motifs below
+13. Moon	
+	- see motifs below
+14. Tunnel
+	- Mining mountain music
+	- [The Hobbit Dwarves]
+
+Motifs
+========
+* Nat (moon overworld)
+	- guitar
+* Ash (shuttle no interaction)
+	- violin
+* Nat and Ash (interaction)
+	- violin and guitar
+* Damon (interaction)
+	- bass
+* Space Pirate
+	- cello

@@ -3,7 +3,6 @@
 var story = {
 	//character stats
 	nat : null,
-	ash : null,
 	natName : "Nat",
 	ashName : "Ash",
 	gender : ["m", "nb", "f"],
@@ -19,8 +18,8 @@ var story = {
 
 	//mission
 	cutscene : false,
-	mission : "Lucky",
-	task : "Punch Me",
+	mission : "Casette Present",
+	task : "Reciever",
 	area : "",
 	storyIndex : 0,
 	taskIndex : 0,
@@ -53,15 +52,21 @@ var story = {
 
 };
 
+//timer based events
+var clock = {
+	timer : false,
+    kt : 0,
+    keyTick : 0
+}
+
 function getCharbyName(name){
 	for(var c=0;c<story.level.chars.length;c++){
 		var char = story.level.chars[c];
 		if(char.name === name)
 			return char;
-	}z
+	}
 	return null;
 }
-
 
 //NOTE: slightly glitchy but gives best result :/
 function follow(p1, p2){
@@ -90,15 +95,49 @@ function follow(p1, p2){
 	}
 
 	return;
-
 }
 
+//wait a certain amount of time before doing something
+function wait(sec, react){
+	//tick tock
+	if(clock.timer && clock.kt == 0){
+		console.log("tick tock");
+	    clock.kt = setInterval(function(){clock.keyTick+=1}, sec*1000);
+	}else if(!clock.timer){
+	  console.log("nah");
+	  clearInterval(clock.kt);
+	  clock.kt = 0;
+	  clock.keyTick=0;
+	}
+
+	//time's up
+	if(clock.keyTick >= 1){
+		console.log("TIME'S UP!");
+		react();
+		clock.timer = false;
+		clock.keyTick = 0;
+	}
+}
+
+//reset the gui and cutscene stuff within the game
 function reset(){
 	story.taskIndex = 0;
 	story.dialogue.show = false;
 	story.choice_box.show = false;
 	story.cutscene = false;
+	story.inventory.show = false;
 }
+
+var talkInitPos;
+
+
+
+
+
+
+
+
+
 
 //the entire script for the game
 function play(){
@@ -112,12 +151,6 @@ function play(){
 	var cutscene = story.cutscene;
 	var dialogue = story.dialogue;
 	var choice = story.choice_box;
-
-
-	//permavariables
-	if(area === "shuttle"){
-		getCharbyName("ash_" + story.gender[story.ashGen]).text = ["Hey bae~"]
-	}
 
 
 if(mission === "Orientation"  && storyIndex == 0){
@@ -169,7 +202,7 @@ else if(mission === "Lucky" && storyIndex == 0){
 					dialogue.show = true;
 				}else{
 					getCharbyName("damon").text = ["Damon: That'll show everyone you're not", "somebody to mess with!"]
-					story.inventory.push("punch badge");
+					story.inventory.bag.push("punch badge");
 					story.mission = "Moon Walk";
 					story.task = "Go for a walk";
 					story.cutscene = false;
@@ -200,6 +233,7 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					dialogue.show = true;
 				}else if(taskIndex == 1){
 					dialogue.show = false;
+					dialogue.index = 0;
 					story.nat.board = false;
 					//goto 
 					var damon = getCharbyName("damon");
@@ -211,10 +245,6 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					var dy = Math.floor(damon.y/story.size);
 
 					follow(story.nat, damon)
-
-					//if(story.nat.pathQueue.length == 0)
-					//	gotoBot(damon, story.nat, story.level, story.size)
-
 
 					if((dx == 13) && (dy == 21) && (!damon.moving))
 						story.taskIndex = 3;
@@ -231,6 +261,60 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					getCharbyName("damon").text = ["Damon: That's enough walking for today..."]
 					story.storyIndex = 1;
 					dialogue.show = false;
+					story.cutscene = false;
+				}
+			}
+		}
+	}
+}
+
+else if(mission === "Casette Present" && storyIndex == 0){
+	if(task === "Reciever"){
+		if(area === "shuttle"){
+			if(trigger === ("talk_ash_" + story.gender[story.ashGen])){
+				var ash = getCharbyName("ash_" + story.gender[story.ashGen]);
+				var ax = Math.floor(ash.x/story.size);
+				var ay = Math.floor(ash.y/story.size);
+				story.cutscene = true;
+				if(taskIndex == 0){
+					story.nat.board = false;
+					dialogue.text = [story.ashName + ": " + story.natName + "!",
+									"I have something to show you!",
+									"Hang on a sec..."];
+					talkInitPos = [Math.floor(ash.x/story.size), Math.floor(ash.y/story.size)];
+					dialogue.show = true;
+				}else if(taskIndex == 1){
+					dialogue.show = false;
+					faceRobot(story.nat, ash);
+					gotoPos(ash, [7, 7], story.level, story.size);
+					story.taskIndex = 2;
+				}else if(taskIndex == 2){
+					faceRobot(story.nat, ash);
+					dialogue.index = 0;
+					//console.log(talkInitPos[0] + " " + talkInitPos[1]);
+					if(ax == 7 && ay == 7 && !ash.moving){
+						wait(1, function(){console.log('return');story.taskIndex=3;});
+						clock.timer = true;
+					}
+				}else if(taskIndex == 3){
+					gotoPos(ash, talkInitPos, story.level, story.size);
+					faceRobot(story.nat, ash);
+					if(ax == talkInitPos[0] && ay == talkInitPos[1] && !ash.moving)
+						story.taskIndex = 4;
+				}else if(taskIndex == 4){
+					faceOpposite(ash,story.nat);
+					dialogue.text = [story.ashName + ": I made you a mixtape",
+									story.natName + " got a casette tape",
+									story.ashName + ": I thought it'll help you with your band practice",
+									"Let me know how it is, ok?"];
+					dialogue.show = true;
+				}else if(taskIndex == 5){
+					ash.text = ["Hey bae~"];
+					story.inventory.bag.push('casette tape');
+					story.storyIndex = 1;
+					dialogue.show = false;
+					story.mission = "Lucky";
+					story.task = "Punch Me";
 					story.cutscene = false;
 				}
 			}

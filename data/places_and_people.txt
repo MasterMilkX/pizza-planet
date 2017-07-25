@@ -19,9 +19,9 @@ Places and People
 	- Hipster Man : Robot
 	- Waitress : Human
 	- Cook : Human
+	- Fanboy : Alien
 6. Car Shop
 	- Mechanic : Robot
-	- Dealer : Alien
 7. Farmer's Market
 	- Farmer : Human
 	- Farmer Wife : Alien
@@ -42,9 +42,9 @@ Places and People
 	- Nat : Robot
 	- Ash : Human
 13. Moon	
-	- Damon : Human?
+	- Damon : Human
 	- Tunnel Keeper : Robot
-	- Traveler : Alien (opposite gender of Nat)
+	- Space Pirate (Ash's ex) : Alien (opposite gender of Nat)
 
 Humans : 9 (+ Ash)
 Aliens : 10

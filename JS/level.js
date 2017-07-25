@@ -238,23 +238,24 @@ var levelList = [
 				new ITEM("phone_table", 15, 9, new boundArea(0, 0, 1, 2), ["*RIIIIING*", "Is this the Krusty Krab?", "*CLICK*"])
 				],
 			[new TELEPORT(13, 14, "moon", 28, 24, "south")],
-			function(){this.chars[0].boundary = new boundArea(10, 7, 5, 4);}
+			function(){this.chars[0].boundary = new boundArea(10, 7, 5, 4);
+						this.chars[0].text = ["Ayyy! " + story.natName + "!"]}
 
 		),
 	new levelDat("shuttle", "q1", "newton",
 		[],
-		[new NPC("ash_" + story.gender[story.ashGen], 7, 9)],
+		[new NPC("ash_" + story.gender[story.ashGen], 13, 12)],
 		[new ITEM("bed", 8, 6, new boundArea(0, 0, 4, 4), ["This bed is juuuust right"], true),
 		 new ITEM("rug", 8, 11, null, null,true),
 		 new ITEM("library_left", 5, 5, new boundArea(0, 0, 1, 4), ["Lots of technical books"], true),
 		 new ITEM("tv", 13, 6, new boundArea(0, 0, 1, 2), ["The TV's unplugged"], true, true, new animateITEM(16, 32, [0], 1, 2)),
-		 new ITEM("tool_table", 14, 12, new boundArea(0, 0, 1, 2), null, false),
+		 new ITEM("tool_table", 14, 12, new boundArea(0, 0, 1, 2), null, true),
 		 new ITEM("instrument_rack", 5, 12, new boundArea(0, 0, 1, 2), ["It's your guitar"], true, true, new animateITEM(16, 32, [0], 1,2)),
 		 new ITEM("table_vert", 14, 10, new boundArea(0, 0, 1, 2), null, false),
 		 new ITEM("clock", 13, 4.5),
 		 new ITEM("painting_1", 8.5, 4)],
 		[new TELEPORT(10, 15, "moon", 14, 23),
 		 new TELEPORT(9, 15, "moon", 14, 23)],
-		nothing()
+		function(){this.chars[0].text = ["Hey bae~"];}
 		)
 ];

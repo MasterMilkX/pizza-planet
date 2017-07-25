@@ -129,60 +129,6 @@ var nat = {
   ct : 0
 };
 
-
-//ash image
-var ashIMG  = new Image();
-ashIMG.src = "../beta_sprites/ash_" + story.gender[story.ashGen] + ".png";
-var ashReady = false;
-ashIMG.onload = function(){ashReady = true;};
-
-//ash
-var ash = {
-  //sprite properties
-  width : 16,
-  height : 20,
-  dir : "south",
-  action: "idle",
-  img : ashIMG,
-  ready : ashReady,
-  offsetX : 0,
-  offsetY : 4,
-
-  //interaction variables
-  board : false,
-  text : "",
-  move : "drunk",
-  wt : 0,
-  interact : false,
-  pathQueue : [],
-  lastPos : [],
-
-  //movement
-  speed : 1,
-  initPos : 0,
-  moving : false,
-  x : 0, 
-  y : 0,
-  velX : 0,
-  velY : 0,
-  fps : 4,            //frame speed
-  fpr : 12,           //# of frames per row
-  show : false,
-  
-  //animation
-  idleNorth : [4,4,4,4],
-  idleSouth : [1,1,1,1],
-  idleWest : [7,7,7,7],
-  idleEast : [10,10,10,10],
-  moveNorth : [3,4,5,4],
-  moveSouth : [0,1,2,1],
-  moveWest : [6,7,8,7],
-  moveEast : [9,10,11,10],
-  curFrame : 0,
-  ct : 0,
-  seqlength : 4
-};
-
 //camera
 var camera = {
   x : 0,
@@ -244,7 +190,6 @@ var buildings = [];
 var items = [];
 
 story.nat = nat;
-story.ash = ash;
 
 
 //////////////////    GENERIC FUNCTIONS   ///////////////
@@ -320,7 +265,8 @@ function loadLevel(aLevel, px, py, dir=null){
   loadMap(aMap);
 
   story.area = aMap.name;
-  bg_music.play();
+  //bg_music.play();
+  aLevel.initFunc();
   console.log("level loaded");
 
 }
@@ -1138,11 +1084,6 @@ function checkRender(){
     nat.img.onload = function(){nat.ready = true;}
   }
 
-  //nat
-  if(!ash.ready){
-    ash.img.onload = function(){ash.ready = true;}
-  }
-
   //npcs
   for(var a=0;a<npcs.length;a++){
     if(!npcs[a].ready){
@@ -1439,16 +1380,8 @@ function render(){
       drawsprite(npcs[c]);
   }
 
-  //draw ash in front
-  if(ash.show && (nat.y >= ash.y))
-    drawsprite(ash);
-
   //draw nat
   drawsprite(nat);
-
-  //draw ash in front
-  if(ash.show && (nat.y >= ash.y))
-    drawsprite(ash);
 
   //if npc in front of nat
   for(var c=0;c<npcs.length;c++){
@@ -1605,12 +1538,12 @@ function actionKeys(){
         story.taskIndex++;
     }else{
       dialogue.index++;
-       console.log('next')
+      //console.log('next')
     }
   }
 
   //hoverboard
-  if(keys[x_key] && !story.cutscene && reInteract && !story.inventory.show){
+  if(keys[x_key] && !story.cutscene && !nat.interact && reInteract && !story.inventory.show){
     reInteract = false;
     nat.board = !nat.board;
   }
@@ -1707,9 +1640,8 @@ function main(){
   settings += " --- Pix X: " + pixX + " | Pix Y: " + pixY;
   settings += " --- " + curSect + " | " + curQuad;
   settings += " --- " + story.taskIndex + " | " + story.cutscene;
- 
-  settings += " --- window: " + story.inventory.window 
-  settings += " | offset: " + indexOffset + " | index: " + story.inventory.index;
+  //settings += " --- " + story.mission + " | " + story.task;
+  settings += " --- " + story.dialogue.index;
 
   /*
   if(npcs.length > 0){

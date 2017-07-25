@@ -77,6 +77,29 @@ function faceOpposite(npc, other){
     npc.dir = "west"
 }
 
+function faceRobot(follower, leader){
+  var leaderX = Math.round(leader.x / story.size);
+  var leaderY = Math.round(leader.y / story.size);
+  var followX = Math.round(follower.x / story.size);
+  var followY = Math.round(follower.y / story.size);
+
+  var diffX = Math.abs(leaderX - followX);
+  var diffY = Math.abs(leaderY - followY);
+
+  //north and south
+  if(diffX < diffY){
+    if(leaderY > followY)
+      follower.dir = "south";
+    else if(leaderY < followY)
+      follower.dir = "north";
+  }else{
+    if(leaderX > followX)
+      follower.dir = "east";
+    else if(leaderX < followX)
+      follower.dir = "west";
+  
+  }
+}
 
 function gotoBot(leader, follower, level, size){
   var leaderX = Math.round(leader.x / size);
@@ -216,15 +239,14 @@ function binMap(level, size, extra=null, exclusions=null){
     }
   }
 
-  var ashPos = Math.floor(story.ash.x/size) + ", " + Math.floor(story.ash.y/size);
   var natPos = Math.floor(story.nat.x/size) + ", " + Math.floor(story.nat.y/size);
 
-  //get ash and nat
+  //get nat
   for(var y = 0; y < mapStuff.rows; y++){
     for(var x = 0; x < mapStuff.cols; x++){
       if(b_map[y][x] == 0){
         var pos = x + ", " + y;
-        b_map[y][x] = (pos === ashPos || pos === natPos ? 1 : 0);
+        b_map[y][x] = (pos === natPos ? 1 : 0);
       }
     }
   }
