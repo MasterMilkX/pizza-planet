@@ -135,7 +135,8 @@ var camera = {
   y : 0
 };
 
-//gui
+//////   gui   //////
+//dialog
 var dialogIMG = new Image();
 dialogIMG.src = '../gui/dialog.png';
 var dialogReady = false;
@@ -151,10 +152,34 @@ selectIMG.src = "../gui/select_box.png";
 var selectReady = false;
 selectIMG.onload = function(){selectReady = true;};
 
+//inventory system
 var inventoryIMG = new Image();
 inventoryIMG.src = "../gui/inventory.png";
 var inventoryReady = false;
 inventoryIMG.onload = function(){inventoryReady = true;};
+
+//emojis
+var emojiIMG = new Image();
+emojiIMG.src = "../gui/emotion.png";
+var emojiReady = false;
+emojiIMG.onload = function(){emojiReady = true;};
+var emojis = ["!", ":)", ":(", "<3", "</3"];
+
+//clock
+var clockIMG = new Image();
+clockIMG.src = "../gui/clock.png";
+var clockReady = false;
+clockIMG.onload = function(){clockReady = true;};
+
+//scene transition fade
+var transitionIMG = new Image();
+transitionIMG.src = "../gui/transition.png";
+var transitionReady = false;
+transitionIMG.onload = function(){transitionReady = true;}; 
+
+
+
+
 
 //music
 var bg_music = new Audio("../music/Night Theme.mp3");
@@ -178,10 +203,11 @@ var moveKeySet = [upKey, leftKey, rightKey, downKey];
 
 var z_key = 90;   //[Z]
 var x_key = 88;   //[X]
-var c_key = 67;   //[X]
+var c_key = 67;   //[C]
 var a_key = 65;   //[A]
 var s_key = 83;   //[S]
-var actionKeySet = [z_key, x_key, a_key, s_key, c_key];
+var t_key = 84;   //[T]
+var actionKeySet = [z_key, x_key, a_key, s_key, c_key, t_key];
 var keys = [];
 
 //add-ins
@@ -267,8 +293,9 @@ function loadLevel(aLevel, px, py, dir=null){
   story.area = aMap.name;
   //bg_music.play();
   aLevel.initFunc();
+  nat.board = false;
   console.log("level loaded");
-
+  story.trigger = "enter_" + story.area;
 }
 
 
@@ -1288,9 +1315,41 @@ function drawInventory(){
   }
 }
 
+function drawEmoji(){
+  for(var n=0;n<npcs.length;n++){
+    var npc = npcs[n];
+    if(npc.emotion !== "" && emojiReady){
+      ctx.drawImage(emojiIMG,
+        16*[emojis.indexOf(npc.emotion)],0,
+        16, 12,
+        npc.x, npc.y-16,
+        16, 12);
+    }
+  }
+}
+
+function drawClock(){
+	if(story.world_clock.show && clockReady){
+		var leadHr = (story.world_clock.time[0] < 10 ? "0" : "");
+		var leadMin = (story.world_clock.time[1] < 10 ? "0" : "");
+
+		ctx.drawImage(clockIMG,
+			0, 0,
+			64, 24,
+			camera.x+250, camera.y+6,
+			64, 24);
+		ctx.font = "16px Fixedsys";
+		ctx.fillStyle = "#ffffff";
+        ctx.fillText(leadHr + story.world_clock.time[0] + ":" + leadMin + story.world_clock.time[1], 
+        	camera.x+262, camera.y+22);
+	}
+}
+
 function drawGUI(){
   drawInventory();
   drawDialog();
+  drawEmoji();
+  drawClock();
 }
 
 //wrap the text if overflowing on the dialog
@@ -1465,7 +1524,7 @@ function anyKey(){
 
 //movement arrow keys
 function moveKeys(){
-  if(!nat.moving && !nat.interact && !story.cutscene && !story.inventory.show){
+  if(!nat.moving && !nat.interact  && !story.pause && !story.cutscene && !story.inventory.show){
     if(keyTick < 1){
       if(keys[leftKey])         //left key
         nat.dir = "west";
@@ -1495,7 +1554,7 @@ function actionKeys(){
 
   //interact [Z]
   var dialogue = story.dialogue;
-  if(keys[z_key] && !nat.interact && !nat.moving && reInteract && !story.cutscene && !story.inventory.show){
+  if(keys[z_key] && !nat.interact && !nat.moving && reInteract && !story.cutscene  && !story.pause && !story.inventory.show){
     for(var i=0;i<items.length;i++){
       if(canInteract(nat, items[i]) && items[i].text){
         story.trigger = "touch_" + items[i].name;
@@ -1520,6 +1579,8 @@ function actionKeys(){
           nat.interact = true;
           dialogue.text = npcs[i].text;
           dialogue.index = 0;
+          clearInterval(npcs[i].wt);
+   		  npcs[i].wt = 0;
         }
         return;
       }
@@ -1533,9 +1594,11 @@ function actionKeys(){
       }
       
       nat.interact = false;
-      nat.other.interact = false;
       if(story.cutscene)
         story.taskIndex++;
+      else
+      	nat.other.interact = false;
+      
     }else{
       dialogue.index++;
       //console.log('next')
@@ -1543,16 +1606,22 @@ function actionKeys(){
   }
 
   //hoverboard
-  if(keys[x_key] && !story.cutscene && !nat.interact && reInteract && !story.inventory.show){
+  if(keys[x_key] && !story.cutscene && !nat.interact && reInteract && !story.inventory.show && !story.pause){
     reInteract = false;
     nat.board = !nat.board;
   }
 
   //inventory
-  if(keys[c_key] && !story.cutscene && reInteract){
+  if(keys[c_key] && !story.cutscene && reInteract && !story.pause){
     reInteract = false;
     story.inventory.show = !story.inventory.show;
 
+  }
+
+  //timer
+  if(keys[t_key] && reInteract){
+  	reInteract = false;
+  	story.world_clock.show = !story.world_clock.show;
   }
 
 }
@@ -1574,10 +1643,28 @@ function init(name, quad, sect, x, y){
     }
   }
   loadLevel(lvl, x*size, y*size);
+  npcs[0].text = ["Damon: Yo bro"];
 }
 
+//the game music function
 function maestro(){
   !bg_music.paused ? bg_music.pause() : bg_music.play();
+}
+
+//the game clock function
+function ticktock(){
+	setInterval(function(){
+		if(!story.pause)
+			story.world_clock.time[1]++;
+		if(story.world_clock.time[1] == 60){
+			story.world_clock.time[0]++;
+			story.world_clock.time[1] = 0;
+		}
+		if(story.world_clock.time[0] == 24){
+			story.world_clock.time[0] = 0;
+		}
+	}
+	,3000);
 }
 
 //main running function for the game
@@ -1586,11 +1673,13 @@ function main(){
   canvas.focus();
   render();
 
-  //game
+  //play the story
   play();
 
   //player movement
-  travel(nat);
+  if(!story.pause)
+  	travel(nat);
+
   panCamera();
   beamMeUp();
   if(story.cutscene)
@@ -1599,13 +1688,16 @@ function main(){
     quadChange(curQuad);
 
   //npc movement
-  for(var n = 0;n<npcs.length;n++){
-    var npc = npcs[n];
-    travel(npc);
-    defaultBehavior(npc);
-    if(story.cutscene)
-      smallStep(npc);
+  if(!story.pause){
+  	for(var n = 0;n<npcs.length;n++){
+	    var npc = npcs[n];
+	    travel(npc);
+	    defaultBehavior(npc);
+	    if(story.cutscene)
+	      smallStep(npc);
+	  }
   }
+  
 
   if(!story.cutscene){
     if(nat.interact){
@@ -1662,3 +1754,4 @@ function main(){
 }
 
 main();
+ticktock();

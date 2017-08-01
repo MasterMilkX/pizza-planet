@@ -91,6 +91,7 @@ function NPC(name, x, y){
   this.pathQueue = [];
   this.lastPos = [];
   this.following = false;
+  this.emotion = "";
 
   //movement
   this.speed = 1;
@@ -203,7 +204,9 @@ var levelList = [
 			 new ITEM("beam", 27, 22, null, null, false, true, new animateITEM(32, 32, [0,1], 25, 2))],
 			[new TELEPORT(27, 23, "vals", 10, 13, "south"),
 			 new TELEPORT(28, 23, "vals", 10, 13, "south")],
-			function(){this.chars[0].boundary = new boundArea(0, 0, 40, 40);}
+			function(){this.chars[0].boundary = new boundArea(0, 0, 40, 40);
+				this.chars[0].text = ["Damon: Yo bro"];
+			}
 			),
 	new levelDat("moon", "q3", "newton",
 			[],
@@ -239,7 +242,7 @@ var levelList = [
 				],
 			[new TELEPORT(13, 14, "moon", 28, 24, "south")],
 			function(){this.chars[0].boundary = new boundArea(10, 7, 5, 4);
-						this.chars[0].text = ["Ayyy! " + story.natName + "!"]}
+						this.chars[0].text = ["Mr. Val: Ayyy! " + story.natName + "!"]}
 
 		),
 	new levelDat("shuttle", "q1", "newton",
@@ -256,6 +259,6 @@ var levelList = [
 		 new ITEM("painting_1", 8.5, 4)],
 		[new TELEPORT(10, 15, "moon", 14, 23),
 		 new TELEPORT(9, 15, "moon", 14, 23)],
-		function(){this.chars[0].text = ["Hey bae~"];}
+		function(){this.chars[0].text = [story.ashName + ": Hey bae~"];}
 		)
 ];

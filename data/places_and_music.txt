@@ -5,42 +5,52 @@ Places and Music
 	- Ska
 	- ["Pizza Day", Reel Big Fish, Sugar Ray]
 2. Laundromat
-	- Beach and funk
+	- Beach and funk 
 	- [Sugar Ray, Red Hot Chili Peppers]
 3. Theater
 	- Punk
-	- [Green Day, The Clash]
+	- [Green Day, The Clash, Fall Out Boy]
 4. Bar
 	- Blues and ballads
 	["Soul to Squeeze", "American Pie"]
+	- (saxophone, piano, double bass)
 5. Waffle House
 	- 90's indie rock
 	- [Cub, Plumtree, Voxtrot]
+	- (harmonica)
 6. Car Shop
 	- 50's rock and roll
 	- [Grease, "Johnny B Goode"]
+	- (guitar)
 7. Farmer's Market
-	- Folk
-	- ["Liar"]
+	- Folk/ Classic Rock
+	- ["Liar", "Joker", Velvet Underground]
+	- (banjo, cowbell, fiddle)
 8. Arcade
 	- 80's pop and Electronic synth
-	- [Zolof]
+	- [Zolof, The Cure, John Hughes Soundtracks]
+	- (chiptune, synth)
 9. Pawn Shop
 	- Lo-fi distortion
-	- [Yuck, Mike Krol]
+	- [Yuck, Mike Krol, Paws, Weezer]
+	- (overdrive guitar)
 10. Handyman
-	- Industrial jazz
-	- [LBP Factory of a Better Tomorrow, Metropolis]
+	- Jazz / Electro Swing
+	- [Metropolis (Anime), Caravan Palace]
+	- (trumpet, saxophone, clarinet) + (bass progression down with snare and bass drum)
 11. Library
 	- Baroque and Orchestra
 	- [Mozart, Vitamin String Quartet]
+	- (violin, cello, viola)
 12. Nat and Ash's Ship 
-	- see motifs below
+	- Indie Rock
+	- [The Pains of Being Pure at Heart, Girlpool]
 13. Moon	
 	- see motifs below
 14. Tunnel
 	- Mining mountain music
 	- [The Hobbit Dwarves]
+	- (bass drums, percussion)
 
 Motifs
 ========
@@ -53,4 +63,10 @@ Motifs
 * Damon (interaction)
 	- bass
 * Space Pirate
-	- cello
+	- low synth
+
+Nostalgic Pizza
+================
+* Alt Rock
+	- [Zolof, Metric, Tokyo Police Club, ]
+	- "Super Ok", Combat Baby", "Nature of the Experiment", 

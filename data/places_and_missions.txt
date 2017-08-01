@@ -1,6 +1,6 @@
 1. Pizza Place
-	- Cold pizza (+2 LOVE pts, -$15)
-	* Take delivery jobs (+$25/run)
+	- Cold pizza (+1 LOVE pts, -$15)
+	* Take delivery jobs (+$15/run)
 	- Advice from Mr. Val (Info on Pizza Planet or LOVE pts)
 2. Laundromat
 	- Collect socks for the old lady (+$2/sock)
@@ -10,7 +10,7 @@
 	- Watch the band (+1 LOVE pts if w/ Ash)
 	- Perform with the band (+2 LOVE pts if Ash attends)
 4. Bar
-	- Drink (-2 LOVE pts, cannot take jobs)
+	- Drink (-2 LOVE pts if returned home, cannot take jobs)
 	- Wait tables (+$5/table)
 5. Waffle House
 	- Eat waffles (-$5)
@@ -28,7 +28,7 @@
 	- Buy stolen goods (-$5..$20, +$2..$50 if returned, +1/-2 LOVE pts if returned or not)
 	- Buy presents for Ash (-$5-$50, +2 LOVE pts)
 10. Handyman
-	- Buy furniture (-$10-$30, +1 LOVE pts, new furniture for ship)
+	- Buy tools and tech for Ash (-$10-$30, +1 LOVE pts)
 	- Fix hoverboard (-$20, upgraded hoverboard)
 11. Library
 	- Read (Info on conversation topics, Shakespeare, or guitar songs)
@@ -37,3 +37,5 @@
 	* Talk with Ash (+/-1..3 LOVE pts based on responses)
 	- Pizza night with Ash (see "Order Pizza")
 	* Sleep (+/-1 LOVE pts based on day)
+13. Moon Tunnel
+	- Tell Tunnel Man jokes (+$2)

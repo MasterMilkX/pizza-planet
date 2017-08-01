@@ -78,18 +78,18 @@ Grocer
 
 Guy in underwear
 - Philosopher
-- Speaks only in quotes
+- Speaks only in quotes or meta gameplay/story
 - Unaware of things around him or the world
 
 Hipster Man
-- Constantly complaining or bored
+- Talks about travels through the galaxy
 - Compares everything to obscure name
 - Claims to know things before you
 
 Keyboardist
 - Logical and snooty
 - Thinks she's the best member of the band
-- LIke a rich Princess
+- Like a rich Princess
 
 Librarian
 - Strict and doesn't like anyone
@@ -118,7 +118,7 @@ Shifty Guy
 
 Singer
 - Wants to be popular and a star
-- Celebrity ego
+- Celebrity ego / British punk
 - Accepting character who sees the good in everyone
 
 Space Pirate (Ash's ex)
@@ -132,11 +132,11 @@ Thief
 - Secretive as well
 
 Tunnel Keeper
-- Lazy, asleep most of the time
+- Unmotivated, lazy, asleep most of the time
 - Daydreams and doodles while at post
 - Slacker
 
 Waitress
-- Gossipy
+- Gossipy -- wants to be a reporter
 - Has a crush on you -- flirty
 - Ash's foil character
