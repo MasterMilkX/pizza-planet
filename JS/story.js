@@ -77,6 +77,27 @@ function getCharbyName(name){
 	return null;
 }
 
+function getItembyName(name){
+	for(var i=0;i<story.level.items.length;i++){
+		var item = story.level.items[i];
+		if(item.name === name)
+			return item;
+	}
+	return null;
+}
+
+function setItemSeq(item, name){
+	for(var i=0;i<item.animation.sequenceSet.length;i++){
+		var seq = item.animation.sequenceSet[i];
+		if(seq.name == name){
+			item.animation.curSeq = seq;
+			return;
+		}
+	}
+
+	console.log(name + " not found in item:" + item.name);
+}
+
 //NOTE: slightly glitchy but gives best result :/
 function follow(p1, p2){
 
@@ -256,10 +277,7 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					follow(story.nat, damon)
 
 					if((dx == 13) && (dy == 21) && (!damon.moving))
-						story.taskIndex = 3;
-					
-						
-					
+						story.taskIndex = 3;					
 					
 				}else if(taskIndex == 3){
 					story.nat.following = false;
@@ -282,7 +300,6 @@ else if(mission === "Casette Present" && storyIndex == 0){
 	if(task === "Reciever"){
 		if(area === "shuttle"){
 			if(trigger === "enter_shuttle"){
-				console.log('go')
 				var ash = getCharbyName("ash_" + story.gender[story.ashGen]);
 				var ax = Math.floor(ash.x/story.size);
 				var ay = Math.floor(ash.y/story.size);
@@ -299,6 +316,7 @@ else if(mission === "Casette Present" && storyIndex == 0){
 					var nx = Math.floor(story.nat.x/story.size);
 					var ny = Math.floor(story.nat.y/story.size);
 					dialogue.show = false;
+					faceRobot(story.nat, ash);
 					gotoPos(ash, [nx, ny-1], story.level, story.size);
 					if(ax == nx && ay == (ny-1) && !ash.moving)
 						story.taskIndex = 2;

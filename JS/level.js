@@ -13,15 +13,20 @@ function getIMGITEM(name){
 	this.ready = itemReady;
 }
 
-function animateITEM(w, h, sequence, fps, fpr){
+function animateITEM(w, h, sequenceSet, fps, fpr){
 	this.width = w;
 	this.height = h;
-	this.sequence = sequence;
+	this.sequenceSet = sequenceSet;
 	this.fps = fps;            //frame speed
   	this.fpr = fpr;            //# of frames per row
   	this.ct = 0;
   	this.curFrame = 0;
-  	this.seqlength = sequence.length;
+	this.curSeq = sequenceSet[0];
+}
+
+function animSet(name, sequence){
+	this.name = name;
+	this.sequence = sequence;
 }
 
 function ITEM(name, x, y, ba=null, text=null, thru=false, show=true, animation=null){
@@ -182,8 +187,6 @@ function getMap(name){
   return null;
 }
 
-function nothing(){return;}
-
 //function ITEM(name, x, y, ba=null, text=null, thru=false, show=true, animation=null){
 
 
@@ -195,13 +198,14 @@ var levelList = [
 			[],
 			[],
 			[new TELEPORT(14, 22, "shuttle", 10, 14)],
-			nothing()
+			function(){return;}
 			),
 	new levelDat("moon", "q2", "newton", 
 			[new PLACE("vals_ship", 24, 15)], 
 			[new NPC("damon", 26, 24)],
 			[new ITEM("vals_shadow", 24.5, 16.5),
-			 new ITEM("beam", 27, 22, null, null, false, true, new animateITEM(32, 32, [0,1], 25, 2))],
+			 new ITEM("beam", 27, 22, null, null, false, true, 
+			 	new animateITEM(32, 32, [new animSet("active", [0,1])], 25, 2))],
 			[new TELEPORT(27, 23, "vals", 10, 13, "south"),
 			 new TELEPORT(28, 23, "vals", 10, 13, "south")],
 			function(){this.chars[0].boundary = new boundArea(0, 0, 40, 40);
@@ -213,14 +217,14 @@ var levelList = [
 			[new NPC("damon", 12, 7)],
 			[],
 			[],
-			nothing()
+			function(){return;}
 			),
 	new levelDat("moon", "q4", "newton",
 			[],
 			[],
 			[],
 			[],
-			nothing()
+			function(){return;}
 			),
 
 	//interior places
@@ -251,9 +255,14 @@ var levelList = [
 		[new ITEM("bed", 8, 6, new boundArea(0, 0, 4, 4), ["This bed is juuuust right"], true),
 		 new ITEM("rug", 8, 11, null, null,true),
 		 new ITEM("library_left", 5, 5, new boundArea(0, 0, 1, 4), ["Lots of technical books"], true),
-		 new ITEM("tv", 13, 6, new boundArea(0, 0, 1, 2), ["The TV's unplugged"], true, true, new animateITEM(16, 32, [0], 1, 2)),
+
+		 new ITEM("tv", 13, 6, new boundArea(0, 0, 1, 2), ["The TV's unplugged"], true, true, 
+		 	new animateITEM(16, 32, [new animSet("off", [0]), new animSet("on", [1])], 2, 2)),
+
 		 new ITEM("tool_table", 14, 12, new boundArea(0, 0, 1, 2), null, true),
-		 new ITEM("instrument_rack", 5, 12, new boundArea(0, 0, 1, 2), ["It's your guitar"], true, true, new animateITEM(16, 32, [0], 1,2)),
+
+		 new ITEM("instrument_rack", 5, 12, new boundArea(0, 0, 1, 2), ["It's your guitar"], true, true, 
+		 	new animateITEM(16, 32, [new animSet("full", [0]), new animSet("bass_only", [1])], 2,2)),
 		 new ITEM("table_vert", 14, 10, new boundArea(0, 0, 1, 2), null, false),
 		 new ITEM("clock", 13, 4.5),
 		 new ITEM("painting_1", 8.5, 4)],

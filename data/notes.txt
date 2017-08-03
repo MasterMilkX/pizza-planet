@@ -2,11 +2,9 @@
 
 - changing between zones through the planet surface is buggy... use a "tunnel" system in the middle of the planet near the origin (4x4)
 
-
 2:36 PM 7/24/2017
 
 - Add emojis, timer events, world clock, and map window
-
 
 3:58 PM 7/26/2017
 

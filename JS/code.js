@@ -275,7 +275,7 @@ function loadLevel(aLevel, px, py, dir=null){
 
   //make a moon level
   if(aLevel.name === "moon"){
-    blankMoon(aLevel.quad);
+    blankMoon(aLevel);
     console.log("moon loaded");
     return;
   }
@@ -286,7 +286,6 @@ function loadLevel(aLevel, px, py, dir=null){
   rows = aMap.rows;
   cols = aMap.cols;
   collideTiles = aMap.collision;
-  teleportTriggers = aLevel.teleports;
 
   loadMap(aMap);
 
@@ -307,7 +306,10 @@ function loadLevel(aLevel, px, py, dir=null){
 
 
 //makes the moon level
-function blankMoon(quadrant){
+function blankMoon(level){
+
+	var quadrant = level.quad;
+
   //reset background
   bgPNG.src = "../beta_sprites/" + quadrant + ".png";
   bgPNG.onload = function(){
@@ -351,6 +353,7 @@ function blankMoon(quadrant){
   curQuad = quadrant;
 
   story.area = curQuad + "_" + curSect;
+  level.initFunc();
   level_loaded = true;
 
   //reset camera
@@ -1229,10 +1232,11 @@ function drawItem(item){
   if(item.ready && item.show){
     if(item.animation !== null){
       var itemANIM = item.animation;
+      itemANIM.seqlength = itemANIM.curSeq.sequence.length;
 
       //get the row and col of the current frame
-      var row = Math.floor(itemANIM.sequence[itemANIM.curFrame] / itemANIM.fpr);
-      var col = Math.floor(itemANIM.sequence[itemANIM.curFrame] % itemANIM.fpr);
+      var row = Math.floor(itemANIM.curSeq.sequence[itemANIM.curFrame] / itemANIM.fpr);
+      var col = Math.floor(itemANIM.curSeq.sequence[itemANIM.curFrame] % itemANIM.fpr);
 
       //console.log("r: " + row + "\tc: " + col + "\tf: " + itemANIM.curFrame)
 
@@ -1643,7 +1647,6 @@ function init(name, quad, sect, x, y){
     }
   }
   loadLevel(lvl, x*size, y*size);
-  npcs[0].text = ["Damon: Yo bro"];
 }
 
 //the game music function
