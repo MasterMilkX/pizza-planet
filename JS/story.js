@@ -21,8 +21,9 @@ var story = {
 
 	//mission
 	cutscene : false,
-	mission : "Casette Present",
-	task : "Reciever",
+	events : [ //new event("Casette Present", "Reciever"),
+			   new event("Lucky", "Punch Me"),
+			   new event("Gamer", "High Score")],
 	area : "",
 	storyIndex : 0,
 	taskIndex : 0,
@@ -66,6 +67,18 @@ var clock = {
 	timer : false,
     kt : 0,
     keyTick : 0
+}
+
+function event(mission, task){
+	this.mission = mission;
+	this.task = task;
+}
+
+function getEvent(mission){
+	for(var m=0;m<story.events.length;m++){
+		if(story.events[m].mission === mission)
+			return story.events[m];
+	}
 }
 
 function getCharbyName(name){
@@ -149,6 +162,14 @@ function wait(sec, react){
 	}
 }
 
+function aMission(mission){
+	for(var m=0;m<story.events.length;m++){
+		if(story.events[m].mission === mission)
+			return true;
+	}
+	return false;
+}
+
 //reset the gui and cutscene stuff within the game
 function reset(){
 	story.taskIndex = 0;
@@ -172,8 +193,6 @@ var talkInitPos;
 //the entire script for the game
 function play(){
 	//make local variables
-	var mission = story.mission;
-	var task = story.task;
 	var area = story.area;
 	var trigger = story.trigger;
 	var storyIndex = story.storyIndex;
@@ -183,8 +202,9 @@ function play(){
 	var choice = story.choice_box;
 
 
-if(mission === "Orientation"  && storyIndex == 0){
-	if(task === "Go to Vals"){
+if(aMission("Orientation") && storyIndex == 0){
+	var ev = getEvent("Orientation");
+	if(ev.task === "Go to Vals"){
 		if(area === "vals"){
 			//do something here
 		}
@@ -192,8 +212,9 @@ if(mission === "Orientation"  && storyIndex == 0){
 }
 
 //test option and inventory
-else if(mission === "Lucky" && storyIndex == 0){
-	if(task === "Punch Me"){
+if(aMission("Lucky") && storyIndex == 0){
+	var ev = getEvent("Lucky");
+	if(ev.task === "Punch Me"){
 		if(area === "q2_newton"){
 			if(trigger === "talk_damon"){
 				story.cutscene = true;
@@ -233,8 +254,7 @@ else if(mission === "Lucky" && storyIndex == 0){
 				}else{
 					getCharbyName("damon").text = ["Damon: That'll show everyone you're not", "somebody to mess with!"]
 					story.inventory.bag.push("punch badge");
-					story.mission = "Moon Walk";
-					story.task = "Go for a walk";
+					ev.task = "Go for a walk";
 					story.cutscene = false;
 					story.taskIndex = 0;
 				}
@@ -249,12 +269,7 @@ else if(mission === "Lucky" && storyIndex == 0){
 				}
 			}
 		}
-	}
-}
-
-//test follow cutscene
-else if(mission === "Moon Walk"  && storyIndex == 0){
-	if(task === "Go for a walk"){
+	}else if(ev.task === "Go for a walk"){
 		if(area === "q2_newton"){
 			if(trigger === "talk_damon"){
 				story.cutscene = true;
@@ -289,15 +304,16 @@ else if(mission === "Moon Walk"  && storyIndex == 0){
 					story.storyIndex = 1;
 					dialogue.show = false;
 					story.cutscene = false;
+					story.events.splice(story.events.indexOf(ev), 1);
 				}
 			}
 		}
 	}
 }
-
 //test timer cutscene
-else if(mission === "Casette Present" && storyIndex == 0){
-	if(task === "Reciever"){
+if(aMission("Casette Present") && storyIndex == 0){
+	var ev = getEvent("Casette Present");
+	if(ev.task === "Reciever"){
 		if(area === "shuttle"){
 			if(trigger === "enter_shuttle"){
 				var ash = getCharbyName("ash_" + story.gender[story.ashGen]);
@@ -357,13 +373,101 @@ else if(mission === "Casette Present" && storyIndex == 0){
 					story.storyIndex = 0;
 					story.taskIndex = 0;
 					dialogue.show = false;
-					story.mission = "Lucky";
-					story.task = "Punch Me";
+					story.cutscene = false;
+					story.events.splice(story.events.indexOf(ev), 1);
+				}
+			}
+		}
+	}
+}
+
+//test timer cutscene
+if(aMission("Gamer") && storyIndex == 0){
+	var ev = getEvent("Gamer");
+	if(ev.task === "High Score"){
+		if(area === "shuttle"){
+			var ash = getCharbyName("ash_" + story.gender[story.ashGen]);
+			if(trigger === "touch_tv"){
+				var ax = Math.floor(ash.x/story.size);
+				var ay = Math.floor(ash.y/story.size);
+				story.cutscene = true;
+				
+				if(taskIndex == 0){
+					//faceRobot(story.nat, ash);
+					story.nat.board = false;
+					faceRobot(ash, story.nat);
+					dialogue.text = [story.ashName + ": Oh!"];
+					dialogue.show = true;
+				}else if(taskIndex == 1){
+					var nx = Math.floor(story.nat.x/story.size);
+					var ny = Math.floor(story.nat.y/story.size);
+					dialogue.show = false;
+
+					var p2;
+					if(nx == 14 && ny == 7)
+						p2 = [12, 7];
+					else
+						p2 = [14, 7];
+					
+					gotoPos(ash, p2, story.level, story.size);
+					if(ax == p2[0] && ay == p2[1] && !ash.moving)
+						story.taskIndex = 2;
+				}else if(taskIndex == 2){
+					faceRobot(ash, story.nat);
+					dialogue.text = [story.ashName + ": Did you want to play video games?"];
+					choice.show = true;
+					choice.options = ["Sure", "Nah"];
+					dialogue.show = true;	
+				}
+			}
+			else if(trigger === "> Sure"){
+				story.cutscene = true;
+				var ax = Math.floor(ash.x/story.size);
+				var ay = Math.floor(ash.y/story.size);
+				var nx = Math.floor(story.nat.x/story.size);
+				var ny = Math.floor(story.nat.y/story.size);
+				var tv = getItembyName("tv");
+				if(taskIndex == 3){
+					ash.dir = (ax == 14 ? "west" : "east");
+					dialogue.show = false;
+					choice.show = false;
+					setItemSeq(tv, "on");
+					wait(3, function(){story.taskIndex=4;});
+					clock.timer = true;
+				}else if(taskIndex == 4){
+					setItemSeq(tv, "off");
+					dialogue.text = [story.ashName + ": Heh... Good game!"];
+					dialogue.show = true;
+					faceRobot(ash, story.nat);
+				}else if(taskIndex == 5){
+					ash.text = [story.ashName + ": Hey bae~"];
+					dialogue.show = false;
+					story.cutscene = false;
+					story.storyIndex = 0;
+					story.taskIndex = 0;
+				}else{
+					story.cutscene = false;
+				}
+			}else if(trigger === "> Nah"){
+				if(taskIndex == 3){
+					story.cutscene = true;
+					choice.show = false;
+					dialogue.text = [story.ashName + ": Okaaay..."];
+					dialogue.show = true;
+				}
+				else if(taskIndex == 4){
+					ash.text = [story.ashName + ": Hey bae~"];
+					dialogue.show = false;
+					story.cutscene = false;
+					story.storyIndex = 0;
+					story.taskIndex = 0;
+				}else{
 					story.cutscene = false;
 				}
 			}
 		}
 	}
 }
+
 
 }

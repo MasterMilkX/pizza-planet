@@ -492,6 +492,8 @@ function beamMeUp(){
       nat.velX = nat.velY = 0;
       nat.action = "idle";
       nat.moving = false;
+
+      
       
       loadLevel(getLevel(trig.dest), trig.dx*size, trig.dy*size, trig.dir);
     }
@@ -1340,12 +1342,12 @@ function drawClock(){
 		ctx.drawImage(clockIMG,
 			0, 0,
 			64, 24,
-			camera.x+250, camera.y+6,
+			camera.x+10, camera.y+6,
 			64, 24);
 		ctx.font = "16px Fixedsys";
 		ctx.fillStyle = "#ffffff";
         ctx.fillText(leadHr + story.world_clock.time[0] + ":" + leadMin + story.world_clock.time[1], 
-        	camera.x+262, camera.y+22);
+        	camera.x+22, camera.y+22);
 	}
 }
 
@@ -1558,7 +1560,7 @@ function actionKeys(){
 
   //interact [Z]
   var dialogue = story.dialogue;
-  if(keys[z_key] && !nat.interact && !nat.moving && reInteract && !story.cutscene  && !story.pause && !story.inventory.show){
+  if(keys[z_key] && !nat.interact && !nat.moving && normal_game_action() && !story.inventory.show){
     for(var i=0;i<items.length;i++){
       if(canInteract(nat, items[i]) && items[i].text){
         story.trigger = "touch_" + items[i].name;
@@ -1610,16 +1612,21 @@ function actionKeys(){
   }
 
   //hoverboard
-  if(keys[x_key] && !story.cutscene && !nat.interact && reInteract && !story.inventory.show && !story.pause){
+  if(keys[x_key] && normal_game_action() && !nat.interact && !story.inventory.show){
     reInteract = false;
     nat.board = !nat.board;
   }
 
   //inventory
-  if(keys[c_key] && !story.cutscene && reInteract && !story.pause){
+  if(keys[c_key] && normal_game_action()){
     reInteract = false;
     story.inventory.show = !story.inventory.show;
+  }
 
+  //sort inventory
+  if(keys[a_key] && normal_game_action()){
+  	reInteract = false;
+  	story.inventory.bag.sort();
   }
 
   //timer
@@ -1630,6 +1637,10 @@ function actionKeys(){
 
 }
 
+
+function normal_game_action(){
+	return (!story.cutscene && reInteract && !story.pause);
+}
 
 
 ////////////////////  GAME FUNCTIONS  //////////////////

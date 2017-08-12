@@ -3,7 +3,7 @@ An RPG with robots, aliens, hoverboards, and lots of pizza
 
 ## Getting Started
 
-Run the index.html file found in the JS file
+Run the index.html file found in the JS folder
 
 ### Prerequisites
 
