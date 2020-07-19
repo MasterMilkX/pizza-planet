@@ -1,0 +1,353 @@
+<html>
+	<head>
+		<title>Polar Planet Test</title>
+		<style>
+			body{
+				text-align: center
+			}
+			#polar{
+				border:1px solid black;
+				width:300px;
+				height:300px;
+				display: block;
+				padding-left: 0;
+				padding-right: 0;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			button, input{
+				display: block;
+				padding-left: 0;
+				padding-right: 0;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+	</head>
+	<p id='debug'></p>
+	<canvas id="polar"></canvas>
+	<input type='text' id='numIn' value='40'>
+	<!--<button id='pause'>PAUSE</button>-->
+	<script>
+		//setup canvas
+		var canvas = document.getElementById("polar");
+		canvas.width = 300;
+		canvas.height = 300;
+		var ctx = canvas.getContext("2d");
+
+		var outDebug = "";
+
+		//planet coords
+		var x = 0;
+		var y = 0;
+
+		//planet center
+		let mx = canvas.width/2;
+		let my = canvas.height/2;
+
+		var r = 100;
+
+
+		function pt(x,y){
+			this.x = x;
+			this.y = y;
+			this.cx = x;		//constant offset
+			this.cy = y;		//constant offset
+			this.ox = (x>(r*2) ? Math.abs((r*4)-x) : x);
+			this.oy = (y>(r*2) ? Math.abs((r*4)-y) : y);
+			this.px = (this.ox/(2*r));
+			this.py = (this.oy/(2*r));
+			this.darkX = false;
+			this.darkY = false;
+			this.rx = 0;
+			this.ry = 0;
+		}
+		//var points = [new pt(60,110), new pt(260,40), new pt(139,240)];
+		var points = [new pt(0,40), new pt(260,40), new pt(139,240)];
+
+		function convPt(p,rad){
+			if(p<0)
+				return rad*4;
+			else if(p>= (rad*4))
+				return p%(rad*4);
+			else
+				return p;
+		}
+
+		function movePt(p){
+			//offset coords
+			let ox = x+p.cx;
+			let oy = y+p.cy;
+
+			//offset double access coords
+			p.ox = (ox>(r*2) ? Math.abs((r*4)-ox) : ox);
+			p.oy = (oy>(r*2) ? Math.abs((r*4)-oy) : oy);
+
+			//percentage offset
+			p.px = p.ox/(2*r);
+			p.py = p.oy/(2*r);
+
+			//set the alternative radii
+			let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.oy,2));
+			let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
+			p.rx = rx;
+			p.ry = ry;
+
+			//set the new positions
+			p.x = (r-p.rx)+p.px*p.rx;
+			p.y = (r-p.ry)+p.py*p.ry;
+
+		}
+
+		/*
+		function movePt(p){
+			//offset coords
+			let ox = x+p.cx;
+			let oy = y+p.cy;
+
+			//planet coords
+			p.ox = (ox>(r*2) ? Math.abs((r*4)-ox) : ox);
+			p.oy = (oy>(r*2) ? Math.abs((r*4)-oy) : oy);
+
+			//set the alternative radii
+			let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.oy,2));
+			let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
+			p.rx = rx;
+			p.ry = ry;
+
+			
+			//calculate new positions based on radius ratio (x'/x = r'/r)
+			let convX = (convPt(ox,r)*rx)/r;
+			let convY = (convPt(oy,r)*ry)/r;
+			if(p == points[0])
+				outDebug = "conv:" + Math.round(convX) + "," + Math.round(convY);
+
+			//set the modified coordinates
+			p.x = mx+rx-Math.abs(convX-2*rx);
+			p.y = my-r+p.cy;
+			//p.y = my+ry-Math.abs(convY-2*ry);
+
+			//p.x = mx+((ox/r)*rx - rx);
+			//p.y = my+((oy/r)*ry - ry);
+
+			//p.x = 
+
+			p.darkX = (convX > rx*2);
+			p.darkY = (convY > ry*2);
+			
+		}
+
+		function moveHorPt(){
+			for(let i=0;i<points.length;i++){
+				let p = points[i];
+
+				//offset coords
+				let ox = x+p.cx;
+
+				//planet coords
+				p.ox = (ox>(r*2) ? Math.abs((r*4)-ox) : ox);
+
+				//set the alternative radii
+				let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.oy,2));
+
+				//set the modified coordinates
+				let convX = (convPt(ox,r)*rx)/r;
+				p.x = mx+rx-Math.abs(convX-2*rx);
+
+				p.darkX = (convX > rx*2);
+			}
+		}
+		function moveVerPt(p){
+			for(let i=0;i<points.length;i++){
+				let p = points[i];
+				//offset coords
+				let oy = y+p.cy;
+
+				//planet coords
+				p.oy = (oy>(r*2) ? Math.abs((r*4)-oy) : oy);
+				let cy = (p.cy>(r*2) ? Math.abs((r*4)-p.cy) : p.cy);
+
+				//set the alternative radii
+				let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
+
+				//set the modified coordinates
+				let convY = (convPt(oy,r)*ry)/r;
+				p.y = my+ry-Math.abs(convY-2*ry);
+
+				p.darkY = (convY > ry*2);
+			}
+		}
+		*/
+
+		function drawPoint(p,color){
+			
+			//draw the point in front or behind the planet
+			if(p.darkX || p.darkY)
+				ctx.globalAlpha = 0.3;
+
+			ctx.fillStyle = color;
+			ctx.fillRect(p.x-2,p.y-2,4,4);
+
+			ctx.globalAlpha = 1.0;
+		}
+
+		function render(){
+			requestAnimationFrame(render);
+			canvas.focus();
+
+			ctx.globalAlpha = 1.0;
+
+			ctx.save();
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			//moon first
+			ctx.fillStyle = "#000000";
+			ctx.beginPath();
+			ctx.arc(mx, my, r, 0, 2*Math.PI);
+			ctx.stroke();
+
+
+			//y axis
+			ctx.fillStyle = "#ff0000";
+			if(y > r*2)
+				ctx.globalAlpha = 0.3;
+
+			let px = mx;
+			let convY = y;
+			let py = my+r-Math.abs(y-2*r);
+			ctx.fillRect(px-2, py-2, 4,4);
+
+			ctx.globalAlpha = 1.0;
+
+			//x axis
+			ctx.fillStyle = "#0000ff";
+			if(x > r*2)
+				ctx.globalAlpha = 0.3;
+
+			let py2 = my;
+			let convX = x;
+			let px2 = mx+r-Math.abs(convX-2*r);
+			ctx.fillRect(px2-2, py2-2, 4,4);
+
+			ctx.globalAlpha = 1.0;
+
+
+			//lock x
+			/*
+			let offX = parseInt(document.getElementById('numIn').value);
+			let r2 = Math.sqrt(Math.pow(r,2)-Math.pow(offX-r,2));
+
+			let py3 = my-r2+(convY*2*r2);
+			let px3 = mx-r+offX;
+			ctx.fillStyle = "#ff0066"
+			ctx.fillRect(px3-2, py3-2, 4,4);
+			*/
+	
+
+			
+			//off point
+			/*
+			let offX = 0;
+			let offY = 40;
+			let r3 = Math.sqrt(Math.pow(r,2)-Math.pow(r-offY,2));
+			let r4 = Math.sqrt(Math.pow(r,2)-Math.pow(r-offX,2));
+			let convX2 = (convPt(x+offX,r3)*r3)/r;
+			let convY2 = (convPt(y+offY,r4)*r4)/r;
+
+			let px4 = mx+r3-Math.abs(convX2-2*r3);
+			let py4 = my+r4-Math.abs(convY2-2*r4);
+
+
+			ctx.fillStyle = "#00ff00";
+			if(convX2 > r3*2 || convY2 > r4*2)
+				ctx.globalAlpha = 0.3;
+
+			ctx.fillRect(px4-2,py4-2,4,4);
+			*/
+
+
+
+			
+
+			//other points
+			let c = ["#F58400", "#07C634", "#F500ED"];  //orange, green, purple
+			for(let i=0;i<points.length;i++){
+				movePt(points[i]);
+				//drawPoint(points[i],c[i]);
+			}
+
+			
+
+
+			ctx.restore();
+
+			let debugStr = x + "," + y;
+			debugStr += " | x:" + Math.round(points[0].x) + ",y:" + Math.round(points[0].y);
+			debugStr += " | ox:" + Math.round(points[0].ox) + "," + Math.round(points[0].oy);
+			debugStr += " | px:" + (points[0].px) + "," + (points[0].py);
+			debugStr += " | rx:" + Math.round(points[0].rx) + "," + Math.round(points[0].ry);
+			debugStr += " | " + outDebug;
+
+			//debugStr += " | " + Math.round(px2) + "-" + Math.round(px4);
+			//debugStr += " | " + convX + " - " + convX2;
+			//debugStr += " | " + r3 + " - " + r4;
+
+			document.getElementById("debug").innerHTML = debugStr;
+
+
+		}
+
+
+
+
+		render();
+		//moveHorPt();
+		//moveVerPt();
+
+
+		let yi = 0;
+		let xi = 0;
+		let rate = 10;
+		let paused = false;
+		function pauseInt(){
+			paused = !paused;
+			if(paused){
+				clearInterval(xi);
+				clearInterval(yi);
+			}else{
+				//yi = setInterval(function(){y++; if(y >= (r*4))y=0}, rate);
+				//xi = setInterval(function(){x++; if(x >= (r*4))x=0}, rate);
+			}
+		}
+
+		//yi = setInterval(function(){y++; if(y >= (r*4))y=0}, rate);
+		//xi = setInterval(function(){x++; if(x >= (r*4))x=0}, rate);
+
+		//determine if valud key to press
+		document.body.addEventListener("keydown", function (e) {
+			if(e.keyCode == 37){
+				x--;
+				//moveHorPt();
+			}else if(e.keyCode == 39){
+				x++;
+				//moveHorPt();
+			}else if(e.keyCode == 38){
+				y--;
+				//moveVerPt();
+			}else if(e.keyCode == 40){
+				y++;
+				//moveVerPt();
+			}
+
+			x=convPt(x,r);
+			y=convPt(y,r);
+			
+
+		});
+
+
+
+		//document.getElementById("pause").onclick = pauseInt;
+
+	</script>
+</html>
