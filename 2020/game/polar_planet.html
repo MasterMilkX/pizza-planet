@@ -49,23 +49,34 @@
 
 
 		function pt(x,y){
+			//on the dark side of the moon
+			this.start_dark = (x > (r*2));
+			y = (y > (r*2) ? (r*4)-y : y);
+
 			this.x = x;
 			this.y = y;
-			this.cx = x;		//constant offset
-			this.cy = y;		//constant offset
+			//this.cx = (x > (r*2) ? (r*4)-x : x);		//constant offset
+			//this.cy = (y > (r*2) ? (r*4)-y : y);		//constant offset
+			this.cx = x;
+			this.cy = y;
 			this.ox = (x>(r*2) ? Math.abs((r*4)-x) : x);
 			this.oy = (y>(r*2) ? Math.abs((r*4)-y) : y);
 			this.px = (this.ox/(2*r));
 			this.py = (this.oy/(2*r));
-			this.darkX = false;
-			this.darkY = false;
+			//this.darkX = false;
+			//this.darkY = false;
 			this.rx = 0;
 			this.ry = 0;
+
+			this.dark = this.start_dark;
 		}
-		//var points = [new pt(60,110), new pt(260,40), new pt(139,240)];
-		var points = [new pt(0,40), new pt(260,40), new pt(139,240)];
+		var points = [new pt(60,110), new pt(260,40), new pt(275,160)];
+		//var points = [new pt(0,40), new pt(260,40), new pt(139,240)];
 
 		function convPt(p,rad){
+			if(rad == 0)
+				return p;
+
 			if(p<0)
 				return rad*4;
 			else if(p>= (rad*4))
@@ -73,16 +84,23 @@
 			else
 				return p;
 		}
-
+		
 		function movePt(p){
 			//offset coords
 			let ox = x+p.cx;
 			let oy = y+p.cy;
 
 			//offset double access coords
-			p.ox = (ox>(r*2) ? Math.abs((r*4)-ox) : ox);
-			p.oy = (oy>(r*2) ? Math.abs((r*4)-oy) : oy);
+			p.ox = ox;
+			p.oy = oy;
+			while(p.ox > (r*2)){
+				p.ox = Math.abs((r*4)-p.ox);
+			}
+			while(p.oy > (r*2)){
+				p.oy = Math.abs((r*4)-p.oy);
+			}
 
+			/*
 			//percentage offset
 			p.px = p.ox/(2*r);
 			p.py = p.oy/(2*r);
@@ -92,13 +110,23 @@
 			let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
 			p.rx = rx;
 			p.ry = ry;
+			*/
 
 			//set the new positions
-			p.x = (r-p.rx)+p.px*p.rx;
-			p.y = (r-p.ry)+p.py*p.ry;
+			//p.x = p.px*p.rx+convPt(p.ox, p.rx);
+			//p.y = p.py*p.ry+convPt(p.oy, p.ry);
+
+
+			p.x = convPt(p.ox, r);
+			p.y = convPt(p.oy, r);
+
+			if(p.x % (2*r) == 0 || p.y % (2*r) == 0)
+				p.dark = !p.dark;
+
 
 		}
 
+		
 		/*
 		function movePt(p){
 			//offset coords
@@ -182,11 +210,11 @@
 		function drawPoint(p,color){
 			
 			//draw the point in front or behind the planet
-			if(p.darkX || p.darkY)
+			if(p.dark)
 				ctx.globalAlpha = 0.3;
 
 			ctx.fillStyle = color;
-			ctx.fillRect(p.x-2,p.y-2,4,4);
+			ctx.fillRect(mx-r+p.x-2,my-r+p.y-2,4,4);
 
 			ctx.globalAlpha = 1.0;
 		}
@@ -272,8 +300,7 @@
 			//other points
 			let c = ["#F58400", "#07C634", "#F500ED"];  //orange, green, purple
 			for(let i=0;i<points.length;i++){
-				movePt(points[i]);
-				//drawPoint(points[i],c[i]);
+				drawPoint(points[i],c[i]);
 			}
 
 			
@@ -298,9 +325,11 @@
 		}
 
 
-
+		for(let i=0;i<points.length;i++)
+			movePt(points[i]);
 
 		render();
+
 		//moveHorPt();
 		//moveVerPt();
 
@@ -341,6 +370,11 @@
 
 			x=convPt(x,r);
 			y=convPt(y,r);
+			
+			if(e.keyCode == 37 || e.keyCode == 39 || e.keyCode == 38 || e.keyCode == 40){
+				for(let i=0;i<points.length;i++)
+					movePt(points[i]);
+			}
 			
 
 		});
