@@ -84,6 +84,12 @@
 			else
 				return p;
 		}
+
+		function baseR(z,rp){
+			if(rp <= 1)
+				return 0
+			return Math.log(z) / Math.log(rp);
+		}
 		
 		function movePt(p){
 			//offset coords
@@ -100,25 +106,35 @@
 				p.oy = Math.abs((r*4)-p.oy);
 			}
 
-			/*
+			
 			//percentage offset
-			p.px = p.ox/(2*r);
-			p.py = p.oy/(2*r);
+			//p.px = p.ox/(2*r);
+			//p.py = p.oy/(2*r);
 
 			//set the alternative radii
+			
 			let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.oy,2));
 			let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
 			p.rx = rx;
 			p.ry = ry;
-			*/
+			
 
 			//set the new positions
 			//p.x = p.px*p.rx+convPt(p.ox, p.rx);
 			//p.y = p.py*p.ry+convPt(p.oy, p.ry);
 
+			px = convPt(p.ox, r);
+			py = convPt(p.oy, r);
 
-			p.x = convPt(p.ox, r);
-			p.y = convPt(p.oy, r);
+			//parabolic function for descent
+			perx = -1*(1/(r*r))*Math.pow(px-r,2)+1;		
+			pery = -1*(1/(r*r))*Math.pow(py-r,2)+1;
+
+			p.px = perx;
+			p.py = pery;	
+
+			p.x = (p.ox > r ? r+(1-perx)*r : (r*perx));
+			p.y = (p.oy > r ? r+(1-pery)*r : (r*pery));
 
 			if(p.x % (2*r) == 0 || p.y % (2*r) == 0)
 				p.dark = !p.dark;
@@ -311,7 +327,7 @@
 			let debugStr = x + "," + y;
 			debugStr += " | x:" + Math.round(points[0].x) + ",y:" + Math.round(points[0].y);
 			debugStr += " | ox:" + Math.round(points[0].ox) + "," + Math.round(points[0].oy);
-			debugStr += " | px:" + (points[0].px) + "," + (points[0].py);
+			debugStr += " | px:" + (points[0].px).toFixed(2) + "," + (points[0].py).toFixed(2);
 			debugStr += " | rx:" + Math.round(points[0].rx) + "," + Math.round(points[0].ry);
 			debugStr += " | " + outDebug;
 
