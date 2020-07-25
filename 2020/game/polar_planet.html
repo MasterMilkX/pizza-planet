@@ -55,23 +55,28 @@
 
 			this.x = x;
 			this.y = y;
-			//this.cx = (x > (r*2) ? (r*4)-x : x);		//constant offset
-			//this.cy = (y > (r*2) ? (r*4)-y : y);		//constant offset
+
+			this.yy = y;
+			this.xx = x;
+
 			this.cx = x;
 			this.cy = y;
+
 			this.ox = (x>(r*2) ? Math.abs((r*4)-x) : x);
 			this.oy = (y>(r*2) ? Math.abs((r*4)-y) : y);
+
 			this.px = (this.ox/(2*r));
 			this.py = (this.oy/(2*r));
-			//this.darkX = false;
-			//this.darkY = false;
+			
 			this.rx = 0;
 			this.ry = 0;
 
-			this.dark = this.start_dark;
+			this.dark = this.start_dark;\
+			this.lockx = false;
+			this.lockx = true;
 		}
-		var points = [new pt(60,110), new pt(260,40), new pt(275,160)];
-		//var points = [new pt(0,40), new pt(260,40), new pt(139,240)];
+		//var points = [new pt(60,110), new pt(260,40), new pt(275,160)];
+		var points = [new pt(30,40), new pt(260,40), new pt(139,240)];
 
 		function convPt(p,rad){
 			if(rad == 0)
@@ -106,23 +111,6 @@
 				p.oy = Math.abs((r*4)-p.oy);
 			}
 
-			
-			//percentage offset
-			//p.px = p.ox/(2*r);
-			//p.py = p.oy/(2*r);
-
-			//set the alternative radii
-			
-			let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.oy,2));
-			let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
-			p.rx = rx;
-			p.ry = ry;
-			
-
-			//set the new positions
-			//p.x = p.px*p.rx+convPt(p.ox, p.rx);
-			//p.y = p.py*p.ry+convPt(p.oy, p.ry);
-
 			px = convPt(p.ox, r);
 			py = convPt(p.oy, r);
 
@@ -133,95 +121,32 @@
 			p.px = perx;
 			p.py = pery;	
 
-			p.x = (p.ox > r ? r+(1-perx)*r : (r*perx));
-			p.y = (p.oy > r ? r+(1-pery)*r : (r*pery));
+			//square-based
+			p.xx = (p.ox > r ? r+(1-perx)*r : (r*perx));
+			p.yy = (p.oy > r ? r+(1-pery)*r : (r*pery));
 
+			//set the alternative radii
+			let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.yy,2));
+			let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.xx,2));
+			p.rx = rx;
+			p.ry = ry;
+
+			//lock at the edge temporarily
+			p.lockx = (p.xx > r+rx || p.xx < r-rx);
+			p.locky = (p.yy > r+ry || p.yy < r-ry);
+
+			if(!p.lockx)
+				p.x = p.xx;
+			if(!p.locky)
+				p.y = p.yy;
+			
+
+			//on the dark or light side of the planet
 			if(p.x % (2*r) == 0 || p.y % (2*r) == 0)
 				p.dark = !p.dark;
 
 
 		}
-
-		
-		/*
-		function movePt(p){
-			//offset coords
-			let ox = x+p.cx;
-			let oy = y+p.cy;
-
-			//planet coords
-			p.ox = (ox>(r*2) ? Math.abs((r*4)-ox) : ox);
-			p.oy = (oy>(r*2) ? Math.abs((r*4)-oy) : oy);
-
-			//set the alternative radii
-			let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.oy,2));
-			let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
-			p.rx = rx;
-			p.ry = ry;
-
-			
-			//calculate new positions based on radius ratio (x'/x = r'/r)
-			let convX = (convPt(ox,r)*rx)/r;
-			let convY = (convPt(oy,r)*ry)/r;
-			if(p == points[0])
-				outDebug = "conv:" + Math.round(convX) + "," + Math.round(convY);
-
-			//set the modified coordinates
-			p.x = mx+rx-Math.abs(convX-2*rx);
-			p.y = my-r+p.cy;
-			//p.y = my+ry-Math.abs(convY-2*ry);
-
-			//p.x = mx+((ox/r)*rx - rx);
-			//p.y = my+((oy/r)*ry - ry);
-
-			//p.x = 
-
-			p.darkX = (convX > rx*2);
-			p.darkY = (convY > ry*2);
-			
-		}
-
-		function moveHorPt(){
-			for(let i=0;i<points.length;i++){
-				let p = points[i];
-
-				//offset coords
-				let ox = x+p.cx;
-
-				//planet coords
-				p.ox = (ox>(r*2) ? Math.abs((r*4)-ox) : ox);
-
-				//set the alternative radii
-				let rx = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.oy,2));
-
-				//set the modified coordinates
-				let convX = (convPt(ox,r)*rx)/r;
-				p.x = mx+rx-Math.abs(convX-2*rx);
-
-				p.darkX = (convX > rx*2);
-			}
-		}
-		function moveVerPt(p){
-			for(let i=0;i<points.length;i++){
-				let p = points[i];
-				//offset coords
-				let oy = y+p.cy;
-
-				//planet coords
-				p.oy = (oy>(r*2) ? Math.abs((r*4)-oy) : oy);
-				let cy = (p.cy>(r*2) ? Math.abs((r*4)-p.cy) : p.cy);
-
-				//set the alternative radii
-				let ry = Math.sqrt(Math.pow(r,2)-Math.pow(r-p.ox,2));
-
-				//set the modified coordinates
-				let convY = (convPt(oy,r)*ry)/r;
-				p.y = my+ry-Math.abs(convY-2*ry);
-
-				p.darkY = (convY > ry*2);
-			}
-		}
-		*/
 
 		function drawPoint(p,color){
 			
@@ -235,6 +160,26 @@
 			ctx.globalAlpha = 1.0;
 		}
 
+		function drawRad(p){
+
+			ctx.fillStyle = "#e5e5e5";
+			ctx.fillRect(mx-1,my-r-1,2, r*2)
+			ctx.fillRect(mx-r-1,my-1,r*2, 2)
+
+			ctx.globalAlpha = 0.3
+			//x axis
+			ctx.fillStyle = "#0000ff";
+			ctx.fillRect(mx-r+p.x-p.rx-1, my-r+p.y-1, p.rx*2, 2);
+
+			//y-axis
+			ctx.fillStyle = "#ff0000";
+			ctx.fillRect(mx-r+p.x-1, my-r+p.y-p.ry-1, 2, p.ry*2);
+
+			ctx.globalAlpha = 1.0
+
+			
+		}
+
 		function render(){
 			requestAnimationFrame(render);
 			canvas.focus();
@@ -245,7 +190,7 @@
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 			//moon first
-			ctx.fillStyle = "#000000";
+			ctx.strokeStyle = "#000000";
 			ctx.beginPath();
 			ctx.arc(mx, my, r, 0, 2*Math.PI);
 			ctx.stroke();
@@ -311,6 +256,7 @@
 
 
 
+			//drawRad(points[0]);
 			
 
 			//other points
@@ -319,7 +265,6 @@
 				drawPoint(points[i],c[i]);
 			}
 
-			
 
 
 			ctx.restore();
@@ -329,6 +274,7 @@
 			debugStr += " | ox:" + Math.round(points[0].ox) + "," + Math.round(points[0].oy);
 			debugStr += " | px:" + (points[0].px).toFixed(2) + "," + (points[0].py).toFixed(2);
 			debugStr += " | rx:" + Math.round(points[0].rx) + "," + Math.round(points[0].ry);
+			debugStr += " | lock:" + points[0].lockx + "," + points[0].locky;
 			debugStr += " | " + outDebug;
 
 			//debugStr += " | " + Math.round(px2) + "-" + Math.round(px4);
