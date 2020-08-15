@@ -57,11 +57,11 @@ Motifs
 * Nat (moon overworld)
 	- guitar
 * Ash (shuttle no interaction)
-	- violin or piano
-* Nat and Ash (interaction)
-	- violin/piano and guitar
-* Damon (interaction)
 	- bass
+* Nat and Ash (interaction)
+	- bass and guitar
+* Damon (interaction)
+	- violin or piano
 * Space Pirate
 	- low synth
 

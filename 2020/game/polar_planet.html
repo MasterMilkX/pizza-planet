@@ -50,8 +50,11 @@
 
 		function pt(x,y){
 			//on the dark side of the moon
-			this.start_dark = (x > (r*2));
-			y = (y > (r*2) ? (r*4)-y : y);
+			this.start_dark = isDark(x,y)
+
+			//y = (this.)
+			//y = (y > (r*2) ? (r*4)-y : y);			//make sure y value is less than 2r
+			//y = (this.start_dark ? (r*4)-y : y);
 
 			this.x = x;
 			this.y = y;
@@ -62,21 +65,34 @@
 			this.cx = x;
 			this.cy = y;
 
+			
+			//light x.y
+			this.lx = (x > (2*r) ? (4*r)-x : x);
+			this.ly = (y > (2*r) ? (4*r)-y : y);
+			//dark x,y
+			this.dx = (x < (2*r) ? (4*r)-x : x);
+			this.dy = (y < (2*r) ? (4*r)-y : y);
+
+			
+			this.c2x = (r*4) - this.cx;
+			this.c2y = (r*4) - this.cy;
+
 			this.ox = (x>(r*2) ? Math.abs((r*4)-x) : x);
 			this.oy = (y>(r*2) ? Math.abs((r*4)-y) : y);
 
 			this.px = (this.ox/(2*r));
 			this.py = (this.oy/(2*r));
-			
+
 			this.rx = 0;
 			this.ry = 0;
 
-			this.dark = this.start_dark;\
+			this.dark = this.start_dark;
 			this.lockx = false;
 			this.lockx = true;
 		}
+		var points = [new pt(30,180), new pt(260,40), new pt(180,160)];
 		//var points = [new pt(60,110), new pt(260,40), new pt(275,160)];
-		var points = [new pt(30,40), new pt(260,40), new pt(139,240)];
+		//var points = [new pt(30,180), new pt(260,40), new pt(139,240)];
 
 		function convPt(p,rad){
 			if(rad == 0)
@@ -90,29 +106,93 @@
 				return p;
 		}
 
-		function baseR(z,rp){
-			if(rp <= 1)
-				return 0
-			return Math.log(z) / Math.log(rp);
+		function getXY(p){
+			console.log("CX: [" + (x+p.cx) + "," + (y+p.cy) + "]");
+			console.log("C2X: [" + (x+p.c2x) + "," + (y+p.c2y) + "]");
+			console.log("OX: [" + (p.ox) + "," + (p.oy) + "]");
+		}
+
+		/*
+		function flipPtX(pt){
+			pt.cx = (r*4)-pt.cx;
+		}
+		function flipPtY(pt){
+			pt.cy = (r*4)-pt.cy;
+		}
+
+		function darkPt(p){
+			if(p.cy < (2*r))
+				p.cy = (4*r)-p.cy;
+			if(p.cx < (2*r))
+				p.cx = (4*r)-p.cx;
+		}
+
+		function lightPt(p){
+			if(p.cy >= (2*r))
+				p.cy = (4*r)-p.cy;
+			if(p.cx >= (2*r))
+				p.cx = (4*r)-p.cx;
+		}
+		*/
+		function isDark(ox, oy){
+			//dark or light side of planet
+			let d = 2*r;
+			ox = ox%(2*d);
+			oy = oy%(2*d);
+
+			if((ox < d) && (oy < d))
+				return false;
+			else if((ox >= d) && (oy < d))
+				return true;
+			else if((ox < d) && (oy >= d))
+				return true;
+			else if((ox >= d) && (oy >= d))
+				return false;
 		}
 		
 		function movePt(p){
+			let cx = p.cx;
+			let cy = p.cy;
+
 			//offset coords
-			let ox = x+p.cx;
-			let oy = y+p.cy;
+			let ox = x+cx;
+			let oy = y+cy;
+
+			p.dark = isDark(ox,oy);
+
+			
+			if(p.dark){
+				ox = x+p.dx;
+				oy = y+p.dy;
+			}else{
+				ox = x+p.lx;
+				oy = y+p.ly;
+			}
+			
 
 			//offset double access coords
 			p.ox = ox;
 			p.oy = oy;
+
+			
+			//keep as 'while' because the numbers are big boys
 			while(p.ox > (r*2)){
 				p.ox = Math.abs((r*4)-p.ox);
 			}
 			while(p.oy > (r*2)){
 				p.oy = Math.abs((r*4)-p.oy);
 			}
+			
+			/*
+			if(p.oy > (r*2)){
+				let ooy = p.oy % (r*2);
+				p.oy = (r*2)-ooy;
+			}
+			*/
+			
 
-			px = convPt(p.ox, r);
-			py = convPt(p.oy, r);
+			let px = convPt(p.ox, r);
+			let py = convPt(p.oy, r);
 
 			//parabolic function for descent
 			perx = -1*(1/(r*r))*Math.pow(px-r,2)+1;		
@@ -141,10 +221,46 @@
 				p.y = p.yy;
 			
 
-			//on the dark or light side of the planet
-			if(p.x % (2*r) == 0 || p.y % (2*r) == 0)
-				p.dark = !p.dark;
+			/*
+			if(p.cx+x < (2*r) || p.cx+x >= (4*r)){
 
+				//dark to light
+				if(p.cy >= (2*r) && p.start_dark)
+					p.cy = (4*r)-p.cy;
+
+				//light to dark to light
+				//if(p.cy >= (2*r) && !p.start_dark)
+				//	p.cy = ;
+
+				p.dark = false;
+				//lightPt(p);
+			}
+			else{
+				p.dark = true;
+				if(p.cy < (2*r) && !p.start_dark)
+					p.cy = (4*r)-p.cy;
+				//darkPt(p);
+			}
+			*/
+
+			/*
+			if(p.cy+y > (2*r) && p.cy+y < (4*r))
+				p.dark = true;
+			else
+				p.dark = false;
+			*/
+
+			/*
+
+			//on the dark or light side of the planet
+			if(p.ox % (2*r) == 0 || p.oy % (2*r) == 0){
+				//console.log("other side!");
+				p.dark = !p.dark;
+			}
+
+			*/
+
+	
 
 		}
 
@@ -167,7 +283,7 @@
 			ctx.fillRect(mx-r-1,my-1,r*2, 2)
 
 			ctx.globalAlpha = 0.3
-			//x axis
+			//x axis 
 			ctx.fillStyle = "#0000ff";
 			ctx.fillRect(mx-r+p.x-p.rx-1, my-r+p.y-1, p.rx*2, 2);
 
@@ -204,6 +320,8 @@
 			let px = mx;
 			let convY = y;
 			let py = my+r-Math.abs(y-2*r);
+			if(y > (2*r))
+				ctx.globalAlpha = 0.3;
 			ctx.fillRect(px-2, py-2, 4,4);
 
 			ctx.globalAlpha = 1.0;
@@ -216,6 +334,8 @@
 			let py2 = my;
 			let convX = x;
 			let px2 = mx+r-Math.abs(convX-2*r);
+			if(x > (2*r))
+				ctx.globalAlpha = 0.3;
 			ctx.fillRect(px2-2, py2-2, 4,4);
 
 			ctx.globalAlpha = 1.0;
@@ -265,17 +385,28 @@
 				drawPoint(points[i],c[i]);
 			}
 
+			ctx.fillStyle = "#000000";
+			ctx.fillRect(mx-2,my-2,4,4);
+
 
 
 			ctx.restore();
 
+			let point = points[2];
 			let debugStr = x + "," + y;
-			debugStr += " | x:" + Math.round(points[0].x) + ",y:" + Math.round(points[0].y);
-			debugStr += " | ox:" + Math.round(points[0].ox) + "," + Math.round(points[0].oy);
-			debugStr += " | px:" + (points[0].px).toFixed(2) + "," + (points[0].py).toFixed(2);
-			debugStr += " | rx:" + Math.round(points[0].rx) + "," + Math.round(points[0].ry);
-			debugStr += " | lock:" + points[0].lockx + "," + points[0].locky;
-			debugStr += " | " + outDebug;
+			debugStr += " | x:" + Math.round(point.x) + ",y:" + Math.round(point.y);
+			debugStr += " | ox:" + Math.round(point.ox) + "," + Math.round(point.oy);
+			debugStr += " | ox':" + Math.round(x+(point.dark ? point.dx : point.lx)) + "," + Math.round(y+(point.dark ? point.dy : point.ly));
+			//debugStr += " | cx:" + Math.round(point.cx) + "," + Math.round(point.cy);
+			//debugStr += " | c2x:" + Math.round(points[0].c2x) + "," + Math.round(points[0].c2y);
+			//debugStr += " | rx:" + Math.round(points[0].rx) + "," + Math.round(points[0].ry);
+			//debugStr += " | lock:" + points[0].lockx + "," + points[0].locky;
+			//debugStr += " | x+cx: " + (point.cx+x) + "," + (point.cy+y);
+			debugStr += " | lx:" + point.lx + "," + point.ly;
+			debugStr += " | dx:" + point.dx + "," + point.dy;
+			debugStr += " | dark:" + point.dark; 
+
+			//debugStr += " | " + outDebug;
 
 			//debugStr += " | " + Math.round(px2) + "-" + Math.round(px4);
 			//debugStr += " | " + convX + " - " + convX2;

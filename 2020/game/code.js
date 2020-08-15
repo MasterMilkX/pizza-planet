@@ -5,8 +5,8 @@ var ctx = canvas.getContext("2d");
 canvas.width = 320;
 canvas.height = 280;
 document.body.appendChild(canvas);
+ctx.imageSmoothingEnabled = false;		//allow scale up of pixel images
 
-var size = 16;
 
 //camera
 var camera = {
@@ -34,28 +34,30 @@ var moveType = "moon";
 
 
 //characters
-var nat = new character("Nat", 9, 10, "", "nat_nb");
+var nat = new character("Nat", 4.5, 6, "", "nat_nb");
 nat.sec_dir = "";
 
 //buildings and environment
-var moonIMG = new Image();
-moonIMG.src = "../env_sprites/moon.png";
 
 var capsuleIMG = new Image();
 capsuleIMG.src = "../env_sprites/capsule_crash.png";
-var capsule = new building(capsuleIMG, 5, 10);
+var capsule = new building(capsuleIMG, 100, 30);
 
 var ufoIMG = new Image();
 ufoIMG.src = "../env_sprites/vals_ship.png";
+var ufo = new building(ufoIMG, 250, 130)
+
 var shuttleIMG = new Image();
 shuttleIMG.src = "../env_sprites/shuttle.png";
+var shuttle = new building(shuttleIMG, 450, 170);
 
-var buildings = [];
+var buildings = [capsule, ufo, shuttle];
 
 //planet coordinates
 var planetXY = {
 	x : 0,
-	y : 0
+	y : 0,
+	pt : 0
 
 }
 
@@ -95,7 +97,14 @@ function move_keyboard(){
 
 	if(!anyMoveKey()){
 		nat.action = "idle";
+		clearInterval(planetXY.mt);
+		planetXY.mt = 0;
+
 		return;
+	}else{
+		for(let b=0;b<buildings.length;b++){
+			movePt(buildings[b],planetXY.x,planetXY.y)
+		}
 	}
 
 	//free movement
@@ -129,24 +138,38 @@ function move_keyboard(){
 			nat.dir = "west";
 			nat.action = "move";
 
-			planetXY.x -= nat.speed;
+			movePlanet(planetXY, "x", nat.speed);
 		}else if(keys[rightKey]){
 			nat.dir = "east";
 			nat.action = "move";
 
-			planetXY.x += nat.speed;
+			movePlanet(planetXY, "x", -nat.speed);
 		}else if(keys[upKey]){
 			nat.dir = "north";
 			nat.action = "move";
 
-			planetXY.y -= nat.speed;
+			movePlanet(planetXY, "y", nat.speed);
 		}else if(keys[downKey]){
 			nat.dir = "south";
 			nat.action = "move";
 
-			planetXY.y += nat.speed;
+			movePlanet(planetXY, "y", -nat.speed);
 		}
 	}
+}
+
+function movePlanet(p, a, m){
+	if(planetXY.mt != 0)
+		return;
+
+	planetXY.mt = setTimeout(function(){
+		if(a == "x")
+			p.x += m
+		else
+			p.y += m
+		clearTimeout(planetXY.mt);
+		planetXY.mt = 0;
+	},10);
 }
 
 
@@ -188,66 +211,9 @@ function panCamera(){
 
 
 
-//draw a character sprite
-function drawsprite(sprite){
-	updatesprite(sprite);
-	rendersprite(sprite);
-}
-
-//update animation
-function updatesprite(sprite){
-	//update the frames
-	if(sprite.ct == (sprite.fps - 1))
-		sprite.curFrame = (sprite.curFrame + 1) % sprite.seqlength;
-		
-	sprite.ct = (sprite.ct + 1) % sprite.fps;
-}
-//draw the sprite
-function rendersprite(sprite){
-	//set the animation sequence
-	var sequence;
-	if(sprite.dir == "north"){
-		if(sprite.action == "idle")
-			sequence = sprite.idleNorth;
-		else 
-			sequence = sprite.moveNorth;
-	}
-	else if(sprite.dir == "south"){
-		if(sprite.action == "idle")
-			sequence = sprite.idleSouth;
-		else 
-			sequence = sprite.moveSouth;
-	}
-	else if(sprite.dir == "west"){
-		if(sprite.action == "idle")
-			sequence = sprite.idleWest;
-		else 
-			sequence = sprite.moveWest;
-	}
-	else if(sprite.dir == "east"){
-		if(sprite.action == "idle")
-			sequence = sprite.idleEast;
-		else 
-			sequence = sprite.moveEast;
-	}
-	
-	//get the row and col of the current frame
-	var row = Math.floor(sequence[sprite.curFrame] / sprite.fpr);
-	var col = Math.floor(sequence[sprite.curFrame] % sprite.fpr);
-
-	var sprIMG = sprite.img;
-
-	if(sprite.show && sprite.img.width > 0){
-		ctx.drawImage(sprIMG, 
-		col * sprite.width, row * sprite.height, 
-		sprite.width, sprite.height,
-		sprite.x, sprite.y, 
-		sprite.width, sprite.height);
-	}
-}
 
 
-function drawCraters(){
+function drawCraters(c){
 	ctx.fillStyle = "#7D7D7D";
 	ctx.beginPath();
 	ctx.ellipse(Math.cos(0), Math.sin(0), 10, Math.sin(planetXY.y),0,0,2*Math.PI);
@@ -263,11 +229,11 @@ function render(){
 	ctx.fillStyle = "#20002F";
 	ctx.fillRect(0,0,canvas.width, canvas.height);
 
-	//draw the moon
-	ctx.drawImage(moonIMG, 0, 100,canvas.width,canvas.height-100);
-	
-	/*   add draw functions here  */
-	drawsprite(nat);
+	//draw the moon + objects
+	drawMoonObjs([buildings], ctx);
+
+
+	drawsprite(nat, ctx);
 
 	
 	
@@ -280,7 +246,9 @@ function render(){
 
 //game initialization function
 function init(){
-
+	for(let b=0;b<buildings.length;b++){
+		movePt(buildings[b],planetXY.x,planetXY.y)
+	}
 }
 
 //main game loop
@@ -293,14 +261,14 @@ function main(){
 	move_keyboard();
 
 	//keep within planetary bounds
-	if(planetXY.x > 100)
+	if(planetXY.x > moonRad*4)
 		planetXY.x = 0;
 	if(planetXY.x < 0)
-		planetXY.x = 100;
-	if(planetXY.y > 100)
+		planetXY.x = moonRad*4;
+	if(planetXY.y > moonRad*4)
 		planetXY.y = 0
 	if(planetXY.y < 0)
-		planetXY.y = 100;
+		planetXY.y = moonRad*4;
 
 	render();
 
@@ -315,7 +283,9 @@ function main(){
 	}
 
 	//debug
-	var settings = "PLANET: (" + planetXY.x + "," +planetXY.y + ")";
+	var settings = "PLANET: (" + planetXY.x + "," + planetXY.y + ")";
+	settings += " | UFO: (" + Math.round(ufo.x) + "," + Math.round(ufo.y) + ")";
+	settings += " | DARK: " + ufo.dark;
 
 	document.getElementById('debug').innerHTML = settings;
 }

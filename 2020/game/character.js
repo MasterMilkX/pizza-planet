@@ -1,5 +1,5 @@
 var size = 32;
-var spr_size = 32;
+var spr_size = 16;
 
 //area for collision (x and y are relative to the object starting from the top right)
 function boundArea(x, y, w, h){
@@ -37,6 +37,7 @@ function character(name, x, y, text,skin=null){
 	this.velX = 0;
 	this.velY = 0;
 	this.move = "drunk_walk";
+	this.mt = 0;
 
 	//interactions
 	this.text = text;
@@ -64,4 +65,63 @@ function character(name, x, y, text,skin=null){
 	this.moveSouth = [1,2];
 	this.moveWest = [7,8];
 	this.moveEast = [10,11];
+}
+
+
+//draw a character sprite
+function drawsprite(sprite, ctx){
+	updatesprite(sprite);
+	rendersprite(sprite, ctx);
+}
+
+//update animation
+function updatesprite(sprite){
+	//update the frames
+	if(sprite.ct == (sprite.fps - 1))
+		sprite.curFrame = (sprite.curFrame + 1) % sprite.seqlength;
+		
+	sprite.ct = (sprite.ct + 1) % sprite.fps;
+}
+//draw the sprite
+function rendersprite(sprite, ctx){
+	//set the animation sequence
+	var sequence;
+	if(sprite.dir == "north"){
+		if(sprite.action == "idle")
+			sequence = sprite.idleNorth;
+		else 
+			sequence = sprite.moveNorth;
+	}
+	else if(sprite.dir == "south"){
+		if(sprite.action == "idle")
+			sequence = sprite.idleSouth;
+		else 
+			sequence = sprite.moveSouth;
+	}
+	else if(sprite.dir == "west"){
+		if(sprite.action == "idle")
+			sequence = sprite.idleWest;
+		else 
+			sequence = sprite.moveWest;
+	}
+	else if(sprite.dir == "east"){
+		if(sprite.action == "idle")
+			sequence = sprite.idleEast;
+		else 
+			sequence = sprite.moveEast;
+	}
+	
+	//get the row and col of the current frame
+	var row = Math.floor(sequence[sprite.curFrame] / sprite.fpr);
+	var col = Math.floor(sequence[sprite.curFrame] % sprite.fpr);
+
+	var sprIMG = sprite.img;
+
+	if(sprite.show && sprite.img.width > 0){
+		ctx.drawImage(sprIMG, 
+		col * sprite.width, row * sprite.height, 
+		sprite.width, sprite.height,
+		sprite.x, sprite.y, 
+		size, size);
+	}
 }
