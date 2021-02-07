@@ -1,0 +1,57 @@
+<html>
+	<head>
+		<title>Jam Session Test</title>
+		<style>
+			body{
+				background-color:#ffffff;
+				text-align: center;
+			}
+			#game{
+				width:320px;
+				height:320px;
+				border:2px solid #000000;
+				padding-left: 0;
+				padding-right: 0;
+				margin-left: auto;
+				margin-right: auto;
+
+				/* scale up pixels */
+				image-rendering: -moz-crisp-edges;
+		        image-rendering: -webkit-crisp-edges;
+		        image-rendering: pixelated;
+		        image-rendering: crisp-edges;
+			}
+		</style>
+		<script src='midiplayer.js'></script>
+		<script src='soundfont-player.min.js'></script>
+		<!--<script src='app.js'></script>-->
+	</head>
+	<body onload='init()'>
+		<div id="debugBar"><button onclick='testSong()'>SONG</button><p id="debug" style="color:black">...</p></div>
+
+		<canvas id='game'></canvas>
+		<script src='game.js'></script>
+		
+		<script src="midiplayer.js"></script>
+		<script src="soundfont-player.min.js"></script>
+		<!--<script src="app.js"></script>-->
+		<!--<script>
+			
+			function testSong(){
+				console.log("song time!")
+
+				// Initialize player and register event handler
+				var Player = new MidiPlayer.Player(function(event) {
+					console.log(event);
+				});
+
+				// Load a MIDI file
+				Player.loadFile('../music/midi/title_and_registration_ash_and_nat.midi');
+				Player.play();
+			}
+		</script>
+		-->
+
+		
+	</body>
+</html>
