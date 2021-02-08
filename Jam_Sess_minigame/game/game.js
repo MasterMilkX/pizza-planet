@@ -93,18 +93,18 @@ function bandMember(name){
 	if(name == "ash"){
 		this.img = ashbandIMG;
 		this.ready = ashBReady;
-		this.x = 14;
-		this.y = 32;
-	}else if(name == "nat"){
-		this.img = natbandIMG;
-		this.ready = natBReady;
-		this.x = 109;
+		this.x = 22;
 		this.y = 32;
 	}else if(name == "damon"){
 		this.img = damonbandIMG;
 		this.ready = damonBReady;
-		this.x = 56;
+		this.x = 54;
 		this.y = 8;
+	}else if(name == "nat"){
+		this.img = natbandIMG;
+		this.ready = natBReady;
+		this.x = 100;
+		this.y = 32;
 	}
 }
 
@@ -114,8 +114,8 @@ var natDuet = new duetMember("nat");
 var ashBand = new bandMember("ash");
 var natBand = new bandMember("nat");
 var damonBand = new bandMember("damon");
-damonBand.i_back = [0,2,0,1];
-damonBand.i_solo = [0,2];
+damonBand.anim['back_idle'] = [0,2,0,1]
+damonBand.anim['solo_idle'] = [0,2]
 
 var characters = [ashDuet,natDuet,ashBand,natBand,damonBand];
 
@@ -354,8 +354,8 @@ function setStage(stageType){
 
 		//draw hearts
 		ctx.drawImage(ashHeart,0,0,64,64,20,112,24,24);
-		ctx.drawImage(natHeart,0,0,64,64,116,112,24,24);
-		ctx.drawImage(damonHeart,0,0,64,64,68,112,24,24);
+		ctx.drawImage(natHeart,0,0,64,64,110,112,24,24);
+		ctx.drawImage(damonHeart,0,0,64,64,64,112,24,24);
 	}
 }
 
@@ -425,6 +425,9 @@ function testSong(){
 //////////////   GAME LOOP FUNCTIONS   //////////////////
 
 let strum = true;
+let sa = true;
+let sb = true;
+let sc = true;
 
 //game initialization function
 function init(){
@@ -454,12 +457,28 @@ function main(){
 	if(keys[a_key] && strum){
 		resetAnim(ashDuet);
 		resetAnim(natDuet);
-		resetAnim(ashBand);
-		resetAnim(damonBand);
-		resetAnim(natBand);
 		strum = false;
 	}if(!keys[a_key])
 		strum = true;
+
+
+	if(keys[upKey] && sa){
+		resetAnim(damonBand);
+		sa = false;
+	}if(!keys[upKey])
+		sa = true;
+
+	if(keys[leftKey] && sb){
+		resetAnim(ashBand);
+		strum = false;
+	}if(!keys[leftKey])
+		sb = true;
+
+	if(keys[rightKey] && sc){
+		resetAnim(natBand);
+		sc = false;
+	}if(!keys[rightKey])
+		sc = true;
 
 	//debug
 	var settings = keys[a_key];
