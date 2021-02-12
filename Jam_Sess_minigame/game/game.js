@@ -1,4 +1,6 @@
-	
+/* global songlist */
+
+
 //set up the canvas
 var canvas = document.getElementById("game");
 var ctx = canvas.getContext("2d");
@@ -138,7 +140,9 @@ damonHeart.onload = function(){damonHReady = true;}
 
 //GAME PROPERTIES
 var curSong = null;
-var curPlayer = "band";
+var curSetup = "band";
+var curPlayer = "nat";
+var curMP3 = null;
 
 
 
@@ -285,14 +289,16 @@ function render(){
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
 	//background
-	ctx.fillStyle = "#dedede";
-	ctx.fillRect(0,0,canvas.width, canvas.height);
+	//ctx.fillStyle = "#dedede";
+	//ctx.fillRect(0,0,canvas.width, canvas.height);
 	
 	/*   add draw functions here  */
 	checkRender();
 
-
-	setStage(curPlayer);
+	if(curSetup == "duet")
+		setStage("duet_" + curPlayer);
+	else
+		setStage("band");
 	
 	ctx.restore();
 }
@@ -332,7 +338,7 @@ function setStage(stageType){
 		//draw hearts
 		ctx.drawImage(ashHeart,0,0,64,64,24,112,24,24);
 		ctx.drawImage(natHeart,0,0,64,64,112,112,24,24);
-	}else if(stageType == "band"){
+	}else{
 		//draw backgrounds
 		ctx.fillStyle = "#cdcdcd";
 		ctx.fillRect(0,0,canvas.width,96);
@@ -364,6 +370,30 @@ function hideAllChars(){
 	for(let c=0;c<characters.length;c++){
 		characters[c].show = false;
 	}
+}
+
+function charPlay(char,aniChange='default'){
+	///set animation character
+	let aniChar = natBand;
+
+	if(curSetup == "band"){
+		if(char == "ash")
+			aniChar = ashBand
+		else if(char == "nat")
+			aniChar = natBand
+		else if(char == "damon")
+			aniChar = damonBand;
+	}else if(curSetup == "duet"){
+		if(char == "ash")
+			aniChar = ashDuet;
+		else if(char == "nat")
+			aniChar = natDuet;
+	}
+
+	//do animation
+	if(aniChange !== "default")
+		aniChar.action = aniChange;
+	resetAnim(aniChar);
 }
 
 
@@ -419,6 +449,56 @@ function testSong(){
 	xhr.send();
 }
 
+function playSong(songIndex){
+	//setup song
+	curSong = songlist[songIndex];
+	curSetup = curSong.view;
+
+	if(curSetup == "band"){
+		stageType = "band";
+	}else{
+		stageType = "duet_" + curPlayer;
+	}
+
+	// Initialize player and register event handler
+	var Player = new MidiPlayer.Player(function(event) {
+		console.log(event);
+	});
+
+	// Load a MIDI file
+	let xhr = new XMLHttpRequest();
+	xhr.open( "GET", curSong.midiURL);
+	xhr.responseType = "arraybuffer";
+	xhr.onreadystatechange = function() {
+			Player = new MidiPlayer.Player(function(event) {
+				if (event.name == 'Note on' && event.channel == 3) {		//ash bass
+					charPlay("ash")
+				}else if(event.name == "Note on" && event.channel == 4){	//nat guitar
+					charPlay("nat")
+				}else if(event.name == "Note on" && event.channel == 10){	//damon drums
+					charPlay("damon");
+				}	
+			});
+			Player.loadArrayBuffer(xhr.response);
+
+			//buildTracksHtml();
+			console.log("SONG LOADED")
+
+			var music = new Audio(curSong.mp3URL);
+			music.volume = 0.85;
+			music.loop = false;
+			music.play();
+
+			setTimeout(function(){Player.play();console.log("play midi")},curSong.tickOff);
+
+	}
+	//}, false);
+	//Player.loadFile('../music/midi/title_and_registration_ash_and_nat.midi');
+	//Player.play();
+	xhr.send();
+
+}
+
 
 
 
@@ -453,6 +533,7 @@ function main(){
 		keyTick=0;
 	}
 
+	/*
 	//strum test
 	if(keys[a_key] && strum){
 		resetAnim(ashDuet);
@@ -480,8 +561,10 @@ function main(){
 	}if(!keys[rightKey])
 		sc = true;
 
+	*/
+
 	//debug
-	var settings = keys[a_key];
+	var settings = curMP3;
 
 	document.getElementById('debug').innerHTML = settings;
 }
